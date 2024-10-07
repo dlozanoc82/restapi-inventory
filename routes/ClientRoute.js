@@ -1,7 +1,9 @@
 import express from "express";
 import { success } from "../helpers/answersApi.js";
 
+import poolDb from "../config/db.js";
 
+console.log(poolDb);
 
 const router = express.Router();
 
