@@ -6,7 +6,10 @@ const getClientsQuery = async(table) => {
     return await queryDatabase(query);
 }
 
-const getClientByIdQuery = () => {}
+const getClientByIdQuery = async(table, id) => {
+    const query = `SELECT * FROM ${table} WHERE id = ?`
+    return await queryDatabase(query, [id]);
+}
 
 const createClientQuery = () => {}
 
