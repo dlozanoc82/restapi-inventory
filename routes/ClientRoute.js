@@ -6,37 +6,37 @@ import { deleteClientController, getClientByIdController, getClientsController }
 console.log(poolDb);
 
 //Funciones que se ejecutan con la ruta
-const getClients = async(req, res) => {
+const getClients = async(req, res, next) => {
 
     try {
         const getClients = await getClientsController();
         successAnswer(req, res, getClients, 200);
     } catch (error) {
-        errorAnswer(req, res, error, 500);
+        next(error);
     }
 
 }
 
-const getClientById = async(req, res) => {
+const getClientById = async(req, res, next) => {
 
     try {
         const getClients = await getClientByIdController(req.params.id);
         successAnswer(req,res, getClients, 200);
     } catch (error) {
-        errorAnswer(req, res, error, 500);
+        next(error);
     }
 
 }
 
 
-const deleteClientById = async(req, res) => {
+const deleteClientById = async(req, res, next) => {
 
     try {
         const item = await deleteClientController(req.body);
         successAnswer(req,res, 'Cliente eliminado correctamente', 200);
     } catch (error) {
         console.log(error);
-        errorAnswer(req, res, error, 500);
+        next(error);
     }
 
 }

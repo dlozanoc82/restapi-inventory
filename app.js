@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import { config } from "./config/config.js";
 import ClientRoute from "./routes/ClientRoute.js"
+import errorsMessages from "./helpers/errorsMessages.js";
 
 const app = express();
 
@@ -14,7 +15,8 @@ app.use(express.urlencoded({extended: true}))
 app.set('port', config.app.port);
 
 //Rutas del Backend
-app.use("/api/clientes",ClientRoute)
+app.use("/api/clientes",ClientRoute);
+app.use(errorsMessages);
 
 export {
     app
