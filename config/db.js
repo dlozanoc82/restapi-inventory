@@ -12,7 +12,7 @@ const dbconfig = {
 const poolDb = mysql.createPool(dbconfig);
 
 // Función para realizar consultas a la base de datos
-async function queryDatabase(query, params) {
+export async function queryDatabase(query, params) {
     try {
         const [rows] = await poolDb.query(query, params);
         return rows;
