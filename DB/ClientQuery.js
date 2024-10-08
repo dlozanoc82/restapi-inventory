@@ -13,7 +13,10 @@ const getClientByIdQuery = async(table, id) => {
 
 const createClientQuery = () => {}
 
-const deleteClientQuery = () => {}
+const deleteClientQuery = async(table, data) => {
+    const query = `DELETE FROM ${table} WHERE id = ?`
+    return await queryDatabase(query, [data.id]);
+}
 
 export {
     getClientsQuery,

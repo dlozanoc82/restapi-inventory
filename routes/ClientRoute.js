@@ -1,7 +1,7 @@
 import express from "express";
 import poolDb from "../config/db.js";
 import { successAnswer, errorAnswer } from "../helpers/answersApi.js";
-import { getClientByIdController, getClientsController } from "../controllers/ClientController.js";
+import { deleteClientController, getClientByIdController, getClientsController } from "../controllers/ClientController.js";
 
 console.log(poolDb);
 
@@ -29,9 +29,22 @@ const getClientById = async(req, res) => {
 }
 
 
+const deleteClientById = async(req, res) => {
+
+    try {
+        const item = await deleteClientController(req.body);
+        successAnswer(req,res, 'Cliente eliminado correctamente', 200);
+    } catch (error) {
+        console.log(error);
+        errorAnswer(req, res, error, 500);
+    }
+
+}
+
 //Rutas
 const router = express.Router();
 router.get("/", getClients);
 router.get("/:id", getClientById);
+router.put('/', deleteClientById)
 
 export default router;
