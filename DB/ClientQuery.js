@@ -34,11 +34,32 @@ const deleteClientQuery = async (table, data) => {
     }
 };
 
-const createClientQuery = () => {}
+
+const createClientQuery = async (table, data) => {
+    try {
+        const query = `INSERT INTO \`${table}\` SET ?`; // Simple inserción
+        return await queryDatabase(query, [data]);
+    } catch (error) {
+        console.error(`[createClientQuery-error]: Error inserting client with data ${JSON.stringify(data)} into table ${table}`, error);
+        throw new Error(`Failed to insert client with data ${JSON.stringify(data)} into table ${table}`);
+    }
+}
+
+const updateClientQuery = async (table, data, id) => {
+    try {
+        const query = `UPDATE \`${table}\` SET ? WHERE id = ?`; // Actualización por `id`
+        return await queryDatabase(query, [data, id]);
+    } catch (error) {
+        console.error(`[updateClientQuery-error]: Error updating client with ID ${id} in table ${table}`, error);
+        throw new Error(`Failed to update client with ID ${id} in table ${table}`);
+    }
+}
+
 
 export {
     getClientsQuery,
     getClientByIdQuery,
     createClientQuery,
-    deleteClientQuery
+    deleteClientQuery,
+    updateClientQuery
 }
