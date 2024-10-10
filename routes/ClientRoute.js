@@ -1,9 +1,12 @@
 import express from "express";
-import poolDb from "../config/db.js";
-import { successAnswer, errorAnswer } from "../helpers/answersApi.js";
-import { createClientController, deleteClientController, getClientByIdController, getClientsController, updateClientController } from "../controllers/ClientController.js";
-
-console.log(poolDb);
+import { successAnswer } from "../helpers/answersApi.js";
+import {
+    createClientController,
+    deleteClientController,
+    getClientByIdController,
+    getClientsController,
+    updateClientController }
+from "../controllers/ClientController.js";
 
 //Obtiene los datos de todos los clientes de la BD
 const getClients = async(req, res, next) => {
@@ -14,7 +17,6 @@ const getClients = async(req, res, next) => {
     } catch (error) {
         next(error);
     }
-
 }
 
 //Obtiene los datos de un solo cliente de la BD
@@ -28,7 +30,6 @@ const getClientById = async(req, res, next) => {
     }
 
 }
-
 
 //Elimina un  cliente
 const deleteClientById = async(req, res, next) => {
