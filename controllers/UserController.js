@@ -3,7 +3,8 @@ import {
     updateUserQuery,
     deleteUserQuery,
     getAllUsersQuery,
-    getUserByIdQuery
+    getUserByIdQuery,
+    getUserByEmailQuery
 } from "../DB/UserQuery.js";
 import { successAnswer } from "../helpers/answersApi.js";
 
@@ -69,10 +70,23 @@ const deleteUserController = async (req, res, next) => {
 };
 
 
+const getUserByEmailController = async (email) => {
+    try {
+        const user = await getUserByEmailQuery(TABLE, email);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        return user;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
 
 export {
     createOrUpdateUserController,
     deleteUserController,
     getAllUsersController,
-    getUserByIdController
+    getUserByIdController,
+    getUserByEmailController
 };

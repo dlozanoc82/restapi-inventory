@@ -1,4 +1,4 @@
-import { queryDatabase } from '../config/db.js'; // Supongamos que tienes una función genérica para hacer consultas
+import { queryDatabase } from '../config/db.js'; 
 
 const getAllUsersQuery = async (table) => {
     const query = `SELECT * FROM \`${table}\``;
@@ -24,7 +24,6 @@ const createUserQuery = async (table, name, email, password, role) => {
     return { id: result.insertId, name, email, role };
 };
 
-
 const updateUserQuery = async (table, id, { name, email, role }) => {
     const query = `UPDATE \`${table}\` SET name = ?, email = ?, role = ? WHERE id = ?`;
     await queryDatabase(query, [name, email, role, id]);
@@ -33,14 +32,19 @@ const updateUserQuery = async (table, id, { name, email, role }) => {
     return { id, name, email, role };
 };
 
-
 const deleteUserQuery = async (table, id) => {
     const query = `DELETE FROM \`${table}\` WHERE id = ?`;
     await queryDatabase(query, [id]);
 };
 
 
+const getUserByEmailQuery = async (table, email) => {
+    const query = `SELECT * FROM \`${table}\` WHERE email = ?`;
+    const result = await queryDatabase(query, [email]);
 
+    // Devuelve el primer usuario encontrado o null si no existe
+    return result.length > 0 ? result[0] : null;
+};
 
 
 export {
@@ -48,5 +52,6 @@ export {
     updateUserQuery,
     deleteUserQuery,
     getAllUsersQuery,
-    getUserByIdQuery
+    getUserByIdQuery,
+    getUserByEmailQuery
 };
