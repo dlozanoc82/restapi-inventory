@@ -5,6 +5,6 @@ const router = express.Router();
 
 router.post('/login', loginController);
 router.post('/logout', logoutController);
-router.post('/token', refreshAccessToken);  // Ruta para renovar el access token usando el refresh token
+router.post('/token', refreshAccessToken);
 
 export default router;
