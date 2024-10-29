@@ -14,5 +14,10 @@ export const config = {
     jwt:{
         secret: process.env.JWT_SECRET || 'notasecreta',
         refreshSecret : process.env.JWT_REFRESH || 'notasecreta2'
+    },
+    corsOptions: {
+        origin: 'http://localhost:5173', // Permitir solo este dominio
+        methods: ['GET', 'POST', 'PUT'],         // Métodos permitidos
+        allowedHeaders: ['Content-Type']
     }
 }
