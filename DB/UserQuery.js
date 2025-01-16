@@ -8,7 +8,7 @@ const getAllUsersQuery = async (table) => {
 
 const getUserByIdQuery = async (table, id) => {
     try {
-        const query = `SELECT * FROM \`${table}\` WHERE id = ?`;
+        const query = `SELECT * FROM \`${table}\` WHERE id_usuario = ?`;
         return await queryDatabase(query, [id]);
     } catch (error) {
         console.error(`[getClientByIdQuery-error]: Error fetching data from ${table} for ID ${id}`, error);
@@ -16,24 +16,30 @@ const getUserByIdQuery = async (table, id) => {
     }
 };
 
-const createUserQuery = async (table, name, email, password, role) => {
-    const query = `INSERT INTO \`${table}\` (name, email, password, role) VALUES (?, ?, ?, ?)`;
-    const result = await queryDatabase(query, [name, email, password, role]);
+const createUserQuery = async (table, userData) => {
+    const columns = Object.keys(userData).join(', ');
+    const placeholders = Object.keys(userData).map(() => '?').join(', ');
+    const values = Object.values(userData);
 
-    // Devuelve el objeto del usuario recién creado, incluyendo el ID generado
-    return { id: result.insertId, name, email, role };
+    const query = `INSERT INTO \`${table}\` (${columns}) VALUES (${placeholders})`;
+    const result = await queryDatabase(query, values);
+
+    return { id: result.insertId, ...userData };
 };
 
-const updateUserQuery = async (table, id, { name, email, role }) => {
-    const query = `UPDATE \`${table}\` SET name = ?, email = ?, role = ? WHERE id = ?`;
-    await queryDatabase(query, [name, email, role, id]);
+const updateUserQuery = async (table, id_usuario, userData) => {
+    const updates = Object.keys(userData).map(key => `${key} = ?`).join(', ');
+    const values = [...Object.values(userData), id_usuario];
 
-    // Devuelve el objeto del usuario actualizado
-    return { id, name, email, role };
+    const query = `UPDATE \`${table}\` SET ${updates} WHERE id_usuario = ?`;
+    await queryDatabase(query, values);
+
+    return { id_usuario, ...userData };
 };
+
 
 const deleteUserQuery = async (table, id) => {
-    const query = `DELETE FROM \`${table}\` WHERE id = ?`;
+    const query = `DELETE FROM \`${table}\` WHERE id_usuario = ?`;
     await queryDatabase(query, [id]);
 };
 

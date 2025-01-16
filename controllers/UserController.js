@@ -36,18 +36,17 @@ const getUserByIdController = async(req, res, next) => {
 
 //CREAR O ACTUALIZAR LOS DATOS EN LA BD
 const createOrUpdateUserController = async (req, res, next) => {
-
     try {
         let message = '';
-        const { id, ...userData } = req.body;
+        const { id_usuario, ...userData } = req.body;
 
-        if (id === 0 || !id) {
+        if (!id_usuario || id_usuario === 0) {
             // Crear usuario si no hay ID o si es 0
-            const newUser = await createUserQuery(TABLE, userData.name, userData.email, userData.password, userData.role);
+            await createUserQuery(TABLE, userData);
             message = 'Usuario creado con éxito';
         } else {
             // Actualizar usuario si hay un ID
-            const updatedUser = await updateUserQuery(TABLE, id, userData);
+            await updateUserQuery(TABLE, id_usuario, userData);
             message = 'Usuario actualizado con éxito';
         }
 
@@ -58,11 +57,12 @@ const createOrUpdateUserController = async (req, res, next) => {
 };
 
 
+
 //ELIMINA UN USUARIO
 const deleteUserController = async (req, res, next) => {
-    const { id } = req.body;
+    const clientId = req.params.id;
     try {
-        await deleteUserQuery(TABLE, id);
+        await deleteUserQuery(TABLE, clientId);
         successAnswer(req, res, 'Usuario eliminado correctamente', 200);
     } catch (error) {
         next(error);
@@ -70,6 +70,7 @@ const deleteUserController = async (req, res, next) => {
 };
 
 
+//OBTENER USUARIO POR EL EMAIL
 const getUserByEmailController = async (email) => {
     try {
         const user = await getUserByEmailQuery(TABLE, email);
