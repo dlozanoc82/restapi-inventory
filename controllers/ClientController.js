@@ -36,7 +36,9 @@ const getClientById = async(req, res, next) => {
 const deleteClientById = async(req, res, next) => {
 
     try {
-        const item = await deleteClientQuery(TABLE, req.body);
+        const clientId = req.params.id;
+        console.log(clientId)
+        const item = await deleteClientQuery(TABLE, clientId);
         successAnswer(req,res, 'Cliente eliminado correctamente', 200);
     } catch (error) {
         console.log(error);

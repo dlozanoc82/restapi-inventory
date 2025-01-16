@@ -11,7 +11,7 @@ from "../controllers/ClientController.js";
 const router = express.Router();
 router.get("/", getClients);
 router.get("/:id", getClientById);
-router.put('/', deleteClientById)
+router.delete('/:id', deleteClientById)
 router.post('/', createOrUpdateClient)
 
 export default router;

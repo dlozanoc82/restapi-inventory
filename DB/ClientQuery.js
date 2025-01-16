@@ -24,13 +24,13 @@ const getClientByIdQuery = async (table, id) => {
 };
 
 // Función para eliminar un cliente por ID
-const deleteClientQuery = async (table, data) => {
+const deleteClientQuery = async (table, id) => {
     try {
         const query = `DELETE FROM \`${table}\` WHERE id = ?`;
-        return await queryDatabase(query, [data.id]);
+        return await queryDatabase(query, id);
     } catch (error) {
-        console.error(`[deleteClientQuery-error]: Error deleting client with ID ${data.id} from ${table}`, error);
-        throw new Error(`Failed to delete client with ID ${data.id} from ${table}`);
+        console.error(`[deleteClientQuery-error]: Error deleting client with ID ${id} from ${table}`, error);
+        throw new Error(`Failed to delete client with ID ${id} from ${table}`);
     }
 };
 

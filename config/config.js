@@ -9,7 +9,7 @@ export const config = {
         host: process.env.DATABASE_HOST || 'localhost',
         user: process.env.DATABASE_USER || 'root',
         password: process.env.DATABASE_PASSWORD || '',
-        database: process.env.DATABASE_DB || 'ejemplo',
+        database: process.env.DATABASE_DB || 'inventario_db',
     },
     jwt:{
         secret: process.env.JWT_SECRET || 'notasecreta',
@@ -17,7 +17,7 @@ export const config = {
     },
     corsOptions: {
         origin: 'http://localhost:5173', // Permitir solo este dominio
-        methods: ['GET', 'POST', 'PUT'],         // Métodos permitidos
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],         // Métodos permitidos
         allowedHeaders: ['Content-Type']
     }
 }

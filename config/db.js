@@ -8,6 +8,8 @@ const dbconfig = {
     database: config.mysql.database
 };
 
+console.log(dbconfig.database)
+
 // Crea un pool de conexiones
 const poolDb = mysql.createPool(dbconfig);
 

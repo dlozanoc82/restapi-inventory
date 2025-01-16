@@ -8,7 +8,7 @@ import {
 } from "../DB/UserQuery.js";
 import { successAnswer } from "../helpers/answersApi.js";
 
-const TABLE = 'users';
+const TABLE = 'usuarios';
 
 
 //OBTENER USUARIOS DE LA BD

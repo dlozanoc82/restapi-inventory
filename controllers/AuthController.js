@@ -1,4 +1,4 @@
-import { deleteRefreshToken, getRefreshTokenByUser, storeRefreshToken, verifyRefreshToken } from "../DB/AuthQuery.js";
+import { deleteRefreshToken, getRefreshTokenByUser, storeRefreshToken, verifyRefreshToken, logUserLogin, logUserLogout } from "../DB/AuthQuery.js";
 import { errorAnswer, successAnswer } from "../helpers/answersApi.js";
 import { generateAccessToken, generateRefreshToken } from "../helpers/token.js";
 import { getUserByEmailController } from "./UserController.js";
@@ -19,21 +19,24 @@ const loginController = async (req, res, next) => {
         }
 
         // Crear payload del usuario con su id y rol
-        const userPayload = { id: user.id, role: user.role };
+        const userPayload = { id: user.id_usuario, role: user.rol_usuario };
 
         // Generar tokens de acceso y refresh para el usuario
         const accessToken = generateAccessToken(userPayload);
         const refreshToken = generateRefreshToken(userPayload);
 
         // Guardar el token de refresh en la base de datos
-        await storeRefreshToken(refreshToken, user.id);
+        await storeRefreshToken(refreshToken, user.id_usuario);
+
+        // Guardar el log de inicio de sesión
+        await logUserLogin(user.id_usuario);
 
         // Crear la respuesta con el nombre del usuario, su rol, y los tokens
         const responseBody = {
             accessToken,
             refreshToken,
-            name: user.name,
-            role: user.role
+            name: user.nombre_usuario,
+            role: user.rol_usuario
         };
 
         // Enviar respuesta exitosa con los datos del usuario y tokens
@@ -64,6 +67,9 @@ const logoutController = async (req, res, next) => {
 
         // Eliminar el token de refresh de la base de datos (cerrar sesión)
         await deleteRefreshToken(refreshToken);
+
+        // Guardar el log de cierre de sesión
+        await logUserLogout(userId);
 
         // Respuesta exitosa confirmando el logout
         successAnswer(req, res, 'Logged out successfully', 200);
