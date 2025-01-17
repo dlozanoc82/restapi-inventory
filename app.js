@@ -5,6 +5,7 @@ import { config } from "./config/config.js";
 import AuthRoute from "./routes/AuthRoute.js";
 import ClientRoute from "./routes/ClientRoute.js"
 import UserRoute from "./routes/UserRoute.js"
+import ProveedorRoute from "./routes/ProveedorRoute.js"
 import errorsMessages from "./helpers/errorsMessages.js";
 
 const app = express();
@@ -25,6 +26,7 @@ app.set('port', config.app.port);
 app.use("/api/auth", AuthRoute);
 app.use("/api/clientes",ClientRoute);
 app.use("/api/usuarios", UserRoute);
+app.use("/api/proveedores", ProveedorRoute)
 app.use(errorsMessages);
 
 export {
