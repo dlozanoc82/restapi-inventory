@@ -6,6 +6,7 @@ import AuthRoute from "./routes/AuthRoute.js";
 import ClientRoute from "./routes/ClientRoute.js"
 import UserRoute from "./routes/UserRoute.js"
 import ProveedorRoute from "./routes/ProveedorRoute.js"
+import ProductRoute from "./routes/ProductRoute.js"
 import errorsMessages from "./helpers/errorsMessages.js";
 
 const app = express();
@@ -27,6 +28,7 @@ app.use("/api/auth", AuthRoute);
 app.use("/api/clientes",ClientRoute);
 app.use("/api/usuarios", UserRoute);
 app.use("/api/proveedores", ProveedorRoute)
+app.use("/api/productos", ProductRoute)
 app.use(errorsMessages);
 
 export {
