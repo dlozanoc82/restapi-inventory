@@ -8,19 +8,45 @@ const dbconfig = {
     database: config.mysql.database
 };
 
-console.log(dbconfig.database)
+console.log(dbconfig.database);
 
 // Crea un pool de conexiones
 const poolDb = mysql.createPool(dbconfig);
 
 // Función para realizar consultas a la base de datos
-export async function queryDatabase(query, params) {
+export async function queryDatabase(query, params, connection = null) {
     try {
-        const [rows] = await poolDb.query(query, params);
+        const conn = connection || poolDb;
+        const [rows] = await conn.query(query, params);
         return rows;
     } catch (error) {
         console.error('[db-err]', error);
         throw error; // Propaga el error
+    }
+}
+
+// Función para iniciar una transacción
+export async function startTransaction() {
+    const connection = await poolDb.getConnection(); // Obtén una conexión del pool
+    await connection.beginTransaction(); // Inicia la transacción
+    return connection; // Devuelve la conexión activa
+}
+
+// Función para confirmar una transacción
+export async function commitTransaction(connection) {
+    try {
+        await connection.commit(); // Confirma la transacción
+    } finally {
+        connection.release(); // Libera la conexión
+    }
+}
+
+// Función para deshacer una transacción
+export async function rollbackTransaction(connection) {
+    try {
+        await connection.rollback(); // Deshace la transacción
+    } finally {
+        connection.release(); // Libera la conexión
     }
 }
 
@@ -39,7 +65,5 @@ async function connectionMySQL() {
 
 // Llama a la función para comprobar la conexión al iniciar
 connectionMySQL();
-
-
 
 export default poolDb;

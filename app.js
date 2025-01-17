@@ -7,6 +7,7 @@ import ClientRoute from "./routes/ClientRoute.js"
 import UserRoute from "./routes/UserRoute.js"
 import ProveedorRoute from "./routes/ProveedorRoute.js"
 import ProductRoute from "./routes/ProductRoute.js"
+import SalesRoute from "./routes/SalesRoute.js"
 import CategoriesRoute from "./routes/CategoriesRoute.js";
 import errorsMessages from "./helpers/errorsMessages.js";
 
@@ -30,7 +31,8 @@ app.use("/api/clientes",ClientRoute);
 app.use("/api/usuarios", UserRoute);
 app.use("/api/proveedores", ProveedorRoute);
 app.use("/api/productos", ProductRoute);
-app.use("/api", CategoriesRoute)
+app.use("/api", CategoriesRoute);
+app.use("/api", SalesRoute)
 app.use(errorsMessages);
 
 export {
