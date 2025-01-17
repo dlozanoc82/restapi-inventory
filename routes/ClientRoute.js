@@ -1,10 +1,5 @@
 import express from "express";
-import {
-    deleteClientById,
-    createOrUpdateClient,
-    getClientById,
-    getClients }
-from "../controllers/ClientController.js";
+import { createOrUpdateClient, deleteClientById, getClientById, getClients } from "../src/clientes/ClientController.js";
 
 
 //Rutas

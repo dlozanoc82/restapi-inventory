@@ -1,11 +1,5 @@
-import {
-    createClientQuery,
-    deleteClientQuery,
-    getClientByIdQuery,
-    getClientsQuery,
-    updateClientQuery
-} from "../DB/ClientQuery.js";
-import { successAnswer } from "../helpers/answersApi.js";
+import { successAnswer } from "../../helpers/answersApi.js";
+import { createClientQuery, deleteClientQuery, getClientByIdQuery, getClientsQuery, updateClientQuery } from "./ClientQuery.js";
 
 const TABLE = 'clientes';
 
@@ -51,15 +45,15 @@ const deleteClientById = async(req, res, next) => {
 const createOrUpdateClient = async (req, res, next) => {
     try {
         let message = '';
-        const { id, ...clientData } = req.body;
+        const { id_cliente, ...clientData } = req.body;
 
-        if (id === 0 || !id) {
+        if (id_cliente === 0 || !id_cliente) {
             // Crear cliente si no hay ID o si es 0
             const newItem = await createClientQuery(TABLE, clientData);
             message = 'Cliente creado con éxito';
         } else {
             // Actualizar cliente si hay un ID
-            const updatedItem = await updateClientQuery(TABLE, clientData, id);
+            const updatedItem = await updateClientQuery(TABLE, clientData, id_cliente);
             message = 'Cliente actualizado con éxito';
         }
         successAnswer(req, res, message, 201);

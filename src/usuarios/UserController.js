@@ -1,3 +1,4 @@
+import { successAnswer } from "../../helpers/answersApi.js";
 import {
     createUserQuery,
     updateUserQuery,
@@ -5,8 +6,8 @@ import {
     getAllUsersQuery,
     getUserByIdQuery,
     getUserByEmailQuery
-} from "../DB/UserQuery.js";
-import { successAnswer } from "../helpers/answersApi.js";
+} from "./UserQuery.js";
+
 
 const TABLE = 'usuarios';
 

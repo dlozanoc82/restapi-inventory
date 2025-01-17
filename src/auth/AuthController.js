@@ -1,7 +1,7 @@
-import { deleteRefreshToken, getRefreshTokenByUser, storeRefreshToken, verifyRefreshToken, logUserLogin, logUserLogout } from "../DB/AuthQuery.js";
-import { errorAnswer, successAnswer } from "../helpers/answersApi.js";
-import { generateAccessToken, generateRefreshToken } from "../helpers/token.js";
-import { getUserByEmailController } from "./UserController.js";
+import { deleteRefreshToken, getRefreshTokenByUser, storeRefreshToken, verifyRefreshToken, logUserLogin, logUserLogout } from "./AuthQuery.js";
+import { errorAnswer, successAnswer } from "../../helpers/answersApi.js";
+import { generateAccessToken, generateRefreshToken } from "../../helpers/token.js";
+import { getUserByEmailController } from "../usuarios/UserController.js";
 
 // Controlador de login - maneja el inicio de sesión y autenticación de usuarios
 const loginController = async (req, res, next) => {

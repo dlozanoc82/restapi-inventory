@@ -1,5 +1,4 @@
-import { queryDatabase } from "../config/db.js";
-
+import { queryDatabase } from "../../config/db.js"; 
 
 // Función para obtener todos los registros de la tabla
 const getClientsQuery = async (table) => {
@@ -15,7 +14,7 @@ const getClientsQuery = async (table) => {
 // Función para obtener un cliente por ID
 const getClientByIdQuery = async (table, id) => {
     try {
-        const query = `SELECT * FROM \`${table}\` WHERE id = ?`;
+        const query = `SELECT * FROM \`${table}\` WHERE id_cliente = ?`;
         return await queryDatabase(query, [id]);
     } catch (error) {
         console.error(`[getClientByIdQuery-error]: Error fetching data from ${table} for ID ${id}`, error);
@@ -26,7 +25,7 @@ const getClientByIdQuery = async (table, id) => {
 // Función para eliminar un cliente por ID
 const deleteClientQuery = async (table, id) => {
     try {
-        const query = `DELETE FROM \`${table}\` WHERE id = ?`;
+        const query = `DELETE FROM \`${table}\` WHERE id_cliente = ?`;
         return await queryDatabase(query, id);
     } catch (error) {
         console.error(`[deleteClientQuery-error]: Error deleting client with ID ${id} from ${table}`, error);
@@ -47,7 +46,7 @@ const createClientQuery = async (table, data) => {
 
 const updateClientQuery = async (table, data, id) => {
     try {
-        const query = `UPDATE \`${table}\` SET ? WHERE id = ?`; // Actualización por `id`
+        const query = `UPDATE \`${table}\` SET ? WHERE id_cliente = ?`; // Actualización por `id`
         return await queryDatabase(query, [data, id]);
     } catch (error) {
         console.error(`[updateClientQuery-error]: Error updating client with ID ${id} in table ${table}`, error);

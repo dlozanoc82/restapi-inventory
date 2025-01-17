@@ -4,7 +4,7 @@ import {
     deleteUserController,
     getAllUsersController,
     getUserByIdController
-} from "../controllers/UserController.js";
+} from "../src/usuarios/UserController.js";
 import { authenticateToken, authorizeRole } from "../middleware/authMiddleware.js";
 
 

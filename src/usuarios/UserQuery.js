@@ -1,4 +1,5 @@
-import { queryDatabase } from '../config/db.js'; 
+import { queryDatabase } from "../../config/db.js";
+
 
 const getAllUsersQuery = async (table) => {
     const query = `SELECT * FROM \`${table}\``;
