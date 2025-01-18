@@ -1,71 +1,71 @@
 import { successAnswer } from "../../helpers/answersApi.js";
-import { createProductQuery, deleteProductQuery, getProductByIdQuery, getProductsQuery, updateProductQuery } from "./ProductsQuery.js";
+import Producto from "./ProductModel.js"; // Modelo de Sequelize
 
-const TABLE = 'productos';
-
-//Obtiene los datos de todos los clientes de la BD
-const getProducts = async(req, res, next) => {
-
+// Obtiene los datos de todos los productos
+const getProducts = async (req, res, next) => {
     try {
-        const products = await getProductsQuery(TABLE);
+        const products = await Producto.findAll(); // Consulta todos los registros
         successAnswer(req, res, products, 200);
     } catch (error) {
         next(error);
     }
-}
+};
 
-//Obtiene los datos de un solo cliente de la BD
-const getProductById = async(req, res, next) => {
-
+// Obtiene los datos de un producto por su ID
+const getProductById = async (req, res, next) => {
     try {
-        const product = await getProductByIdQuery(TABLE, req.params.id);
-        successAnswer(req,res, product, 200);
+        const product = await Producto.findByPk(req.params.id); // Busca por ID primario
+        if (!product) {
+            return res.status(404).json({ message: "Producto no encontrado" });
+        }
+        successAnswer(req, res, product, 200);
     } catch (error) {
         next(error);
     }
+};
 
-}
-
-//Elimina un  cliente
-const deleteProductById = async(req, res, next) => {
-
+// Elimina un producto por su ID
+const deleteProductById = async (req, res, next) => {
     try {
-        const productId = req.params.id;
-        console.log(productId)
-        const item = await deleteProductQuery(TABLE, productId);
-        successAnswer(req,res, 'Producto eliminado correctamente', 200);
+        const rowsDeleted = await Producto.destroy({ where: { id_producto: req.params.id } });
+        if (rowsDeleted === 0) {
+            return res.status(404).json({ message: "Producto no encontrado" });
+        }
+        successAnswer(req, res, "Producto eliminado correctamente", 200);
     } catch (error) {
-        console.log(error);
         next(error);
     }
+};
 
-}
-
-//Agrega o actualiza un cliente
+// Crea o actualiza un producto
 const createOrUpdateProduct = async (req, res, next) => {
     try {
-        let message = '';
         const { id_producto, ...productData } = req.body;
 
-        if (id_producto === 0 || !id_producto) {
-            // Crear cliente si no hay ID o si es 0
-            const newItem = await createProductQuery(TABLE, productData);
-            message = 'Producto creado con éxito';
+        let message;
+        if (!id_producto) {
+            // Crear producto
+            await Producto.create(productData);
+            message = "Producto creado con éxito";
         } else {
-            // Actualizar cliente si hay un ID
-            const updatedItem = await updateProductQuery(TABLE, productData, id_producto);
-            message = 'Producto actualizado con éxito';
+            // Actualizar producto
+            const [rowsUpdated] = await Producto.update(productData, {
+                where: { id_producto },
+            });
+            if (rowsUpdated === 0) {
+                return res.status(404).json({ message: "Producto no encontrado" });
+            }
+            message = "Producto actualizado con éxito";
         }
         successAnswer(req, res, message, 201);
     } catch (error) {
-        console.error(error);
         next(error);
     }
-}
+};
 
-export{
+export {
     deleteProductById,
     createOrUpdateProduct,
     getProductById,
-    getProducts
-}
+    getProducts,
+};
