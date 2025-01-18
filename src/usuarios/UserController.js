@@ -1,82 +1,82 @@
-import { successAnswer } from "../../helpers/answersApi.js";
-import {
-    createUserQuery,
-    updateUserQuery,
-    deleteUserQuery,
-    getAllUsersQuery,
-    getUserByIdQuery,
-    getUserByEmailQuery
-} from "./UserQuery.js";
+import { successAnswer, errorAnswer } from "../../helpers/answersApi.js";
+import Usuario from "./UsersModel.js";
 
-
-const TABLE = 'usuarios';
-
-
-//OBTENER USUARIOS DE LA BD
+// Obtener todos los usuarios de la base de datos
 const getAllUsersController = async (req, res, next) => {
     try {
-        const users = await getAllUsersQuery(TABLE);
+        const users = await Usuario.findAll();
         successAnswer(req, res, users, 200);
     } catch (error) {
         next(error);
     }
 };
 
-//Obtiene los datos de un solo usuario de la BD
-const getUserByIdController = async(req, res, next) => {
-
+// Obtener los datos de un usuario específico por ID
+const getUserByIdController = async (req, res, next) => {
     try {
-        const getUser = await getUserByIdQuery(TABLE, req.params.id);
-        successAnswer(req,res, getUser, 200);
+        const user = await Usuario.findByPk(req.params.id); // Buscar por clave primaria
+        if (!user) {
+            return errorAnswer(req, res, "Usuario no encontrado", 404);
+        }
+        successAnswer(req, res, user, 200);
     } catch (error) {
         next(error);
     }
+};
 
-}
-
-
-//CREAR O ACTUALIZAR LOS DATOS EN LA BD
+// Crear o actualizar los datos de un usuario
 const createOrUpdateUserController = async (req, res, next) => {
     try {
-        let message = '';
         const { id_usuario, ...userData } = req.body;
 
+        let user;
         if (!id_usuario || id_usuario === 0) {
-            // Crear usuario si no hay ID o si es 0
-            await createUserQuery(TABLE, userData);
-            message = 'Usuario creado con éxito';
+            // Crear un nuevo usuario
+            user = await Usuario.create(userData);
+            successAnswer(req, res, "Usuario creado con éxito", 201);
         } else {
-            // Actualizar usuario si hay un ID
-            await updateUserQuery(TABLE, id_usuario, userData);
-            message = 'Usuario actualizado con éxito';
+            // Actualizar un usuario existente
+            const [updated] = await Usuario.update(userData, {
+                where: { id_usuario },
+            });
+
+            if (updated) {
+                successAnswer(req, res, "Usuario actualizado con éxito", 200);
+            } else {
+                errorAnswer(req, res, "Usuario no encontrado para actualizar", 404);
+            }
         }
-
-        successAnswer(req, res, message, 201);
     } catch (error) {
         next(error);
     }
 };
 
-
-
-//ELIMINA UN USUARIO
+// Eliminar un usuario por ID
 const deleteUserController = async (req, res, next) => {
-    const clientId = req.params.id;
     try {
-        await deleteUserQuery(TABLE, clientId);
-        successAnswer(req, res, 'Usuario eliminado correctamente', 200);
+        const deleted = await Usuario.destroy({
+            where: { id_usuario: req.params.id },
+        });
+
+        if (deleted) {
+            successAnswer(req, res, "Usuario eliminado correctamente", 200);
+        } else {
+            errorAnswer(req, res, "Usuario no encontrado para eliminar", 404);
+        }
     } catch (error) {
         next(error);
     }
 };
 
-
-//OBTENER USUARIO POR EL EMAIL
+// Obtener un usuario por su email
 const getUserByEmailController = async (email) => {
     try {
-        const user = await getUserByEmailQuery(TABLE, email);
+        const user = await Usuario.findOne({
+            where: { email },
+        });
+
         if (!user) {
-            throw new Error('User not found');
+            throw new Error("Usuario no encontrado");
         }
         return user;
     } catch (error) {
@@ -84,11 +84,10 @@ const getUserByEmailController = async (email) => {
     }
 };
 
-
 export {
     createOrUpdateUserController,
     deleteUserController,
     getAllUsersController,
     getUserByIdController,
-    getUserByEmailController
+    getUserByEmailController,
 };

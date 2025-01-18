@@ -1,71 +1,73 @@
-import { successAnswer } from "../../helpers/answersApi.js";
-import { createClientQuery, deleteClientQuery, getClientByIdQuery, getClientsQuery, updateClientQuery } from "./ClientQuery.js";
+import { successAnswer, errorAnswer } from "../../helpers/answersApi.js";
+import Cliente from "./ClientsModel.js";
 
-const TABLE = 'clientes';
-
-//Obtiene los datos de todos los clientes de la BD
-const getClients = async(req, res, next) => {
-
+// Obtener todos los clientes
+const getClients = async (req, res, next) => {
     try {
-        const getClients = await getClientsQuery(TABLE);
-        successAnswer(req, res, getClients, 200);
+        const clients = await Cliente.findAll(); // Obtiene todos los registros de la tabla
+        successAnswer(req, res, clients, 200);
     } catch (error) {
         next(error);
     }
-}
+};
 
-//Obtiene los datos de un solo cliente de la BD
-const getClientById = async(req, res, next) => {
-
+// Obtener un cliente por ID
+const getClientById = async (req, res, next) => {
     try {
-        const getClients = await getClientByIdQuery(TABLE, req.params.id);
-        successAnswer(req,res, getClients, 200);
+        const client = await Cliente.findByPk(req.params.id); // Busca por clave primaria
+        if (!client) {
+            return errorAnswer(req, res, "Cliente no encontrado", 404);
+        }
+        successAnswer(req, res, client, 200);
     } catch (error) {
         next(error);
     }
+};
 
-}
-
-//Elimina un  cliente
-const deleteClientById = async(req, res, next) => {
-
+// Eliminar un cliente por ID
+const deleteClientById = async (req, res, next) => {
     try {
         const clientId = req.params.id;
-        console.log(clientId)
-        const item = await deleteClientQuery(TABLE, clientId);
-        successAnswer(req,res, 'Cliente eliminado correctamente', 200);
+        const result = await Cliente.destroy({ where: { id_cliente: clientId } }); // Elimina por condición
+        if (result === 0) {
+            return errorAnswer(req, res, "Cliente no encontrado", 404);
+        }
+        successAnswer(req, res, "Cliente eliminado correctamente", 200);
     } catch (error) {
-        console.log(error);
         next(error);
     }
+};
 
-}
-
-//Agrega o actualiza un cliente
+// Crear o actualizar un cliente
 const createOrUpdateClient = async (req, res, next) => {
     try {
-        let message = '';
         const { id_cliente, ...clientData } = req.body;
 
-        if (id_cliente === 0 || !id_cliente) {
-            // Crear cliente si no hay ID o si es 0
-            const newItem = await createClientQuery(TABLE, clientData);
-            message = 'Cliente creado con éxito';
+        let message;
+        if (!id_cliente) {
+            // Crear nuevo cliente si no hay ID
+            await Cliente.create(clientData);
+            message = "Cliente creado con éxito";
         } else {
             // Actualizar cliente si hay un ID
-            const updatedItem = await updateClientQuery(TABLE, clientData, id_cliente);
-            message = 'Cliente actualizado con éxito';
+            const [updatedRows] = await Cliente.update(clientData, {
+                where: { id_cliente },
+            });
+            if (updatedRows === 0) {
+                return errorAnswer(req, res, "Cliente no encontrado", 404);
+            }
+            message = "Cliente actualizado con éxito";
         }
+
         successAnswer(req, res, message, 201);
     } catch (error) {
-        console.error(error);
         next(error);
     }
-}
+};
 
-export{
+export {
+    getClients,
+    getClientById,
     deleteClientById,
     createOrUpdateClient,
-    getClientById,
-    getClients
-}
+};

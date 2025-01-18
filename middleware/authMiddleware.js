@@ -48,5 +48,16 @@ const authorizeRole = (role) => {
     };
 };
 
+const verifyRefreshToken = (token) => {
+    try {
+        // Verificar el token con la clave secreta usada para firmarlo
+        const decoded = jwt.verify(token, config.jwt.refreshSecret);
+        console.log({decoded})
+        return decoded;  // Devuelve el payload del token (por ejemplo, { id, role })
+    } catch (error) {
+        throw new Error('Invalid or expired refresh token');
+    }
+};
+
 // Exportación de las funciones de autenticación y autorización para su uso en otras partes del proyecto
-export { authenticateToken, authorizeRole };
+export { authenticateToken, authorizeRole, verifyRefreshToken };
