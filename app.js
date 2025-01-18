@@ -9,6 +9,9 @@ import ProveedorRoute from "./routes/ProveedorRoute.js"
 import ProductRoute from "./routes/ProductRoute.js"
 import SalesRoute from "./routes/SalesRoute.js"
 import CategoriesRoute from "./routes/CategoriesRoute.js";
+import MeansPaymentRoute from "./routes/MeansPaymentRoute.js"
+import SeparateRoute from "./routes/SeparateRoute.js"
+import QuoteRoute from "./routes/QuoteRoute.js"
 import errorsMessages from "./helpers/errorsMessages.js";
 
 const app = express();
@@ -33,6 +36,9 @@ app.use("/api/proveedores", ProveedorRoute);
 app.use("/api/productos", ProductRoute);
 app.use("/api", CategoriesRoute);
 app.use("/api", SalesRoute)
+app.use("/api/medios-de-pago", MeansPaymentRoute)
+app.use("/api", SeparateRoute)
+app.use("/api", QuoteRoute)
 app.use(errorsMessages);
 
 export {
