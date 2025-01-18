@@ -1,71 +1,79 @@
 import { successAnswer } from "../../helpers/answersApi.js";
-import { createSupplierQuery, deleteSupplierQuery, getSupplierByIdQuery, getSuppliersQuery, updateSupplierQuery } from "./ProveedorQuery.js";
+import Proveedor from "./ProveedorModel.js";
 
-const TABLE = 'proveedores';
-
-//Obtiene los datos de todos los clientes de la BD
-const getSuppliers = async(req, res, next) => {
-
+// Obtener todos los proveedores
+const getSuppliers = async (req, res, next) => {
     try {
-        const suppliers = await getSuppliersQuery(TABLE);
+        const suppliers = await Proveedor.findAll();
         successAnswer(req, res, suppliers, 200);
     } catch (error) {
         next(error);
     }
-}
+};
 
-//Obtiene los datos de un solo cliente de la BD
-const getSupplierById = async(req, res, next) => {
-
+// Obtener un proveedor por ID
+const getSupplierById = async (req, res, next) => {
     try {
-        const supplier = await getSupplierByIdQuery(TABLE, req.params.id);
-        successAnswer(req,res, supplier, 200);
+        const { id } = req.params;
+        const supplier = await Proveedor.findByPk(id);
+
+        if (!supplier) {
+            return res.status(404).json({ error: "Proveedor no encontrado" });
+        }
+
+        successAnswer(req, res, supplier, 200);
     } catch (error) {
         next(error);
     }
+};
 
-}
-
-//Elimina un  cliente
-const deleteSupplierById  = async(req, res, next) => {
-
-    try {
-        const supplierId = req.params.id;
-        console.log(supplierId)
-        const item = await deleteSupplierQuery(TABLE, supplierId);
-        successAnswer(req,res, 'Proveedor eliminado correctamente', 200);
-    } catch (error) {
-        console.log(error);
-        next(error);
-    }
-
-}
-
-//Agrega o actualiza un cliente
+// Crear o actualizar un proveedor
 const createOrUpdateSupplier = async (req, res, next) => {
     try {
-        let message = '';
-        const { id_proveedor , ...supplierData } = req.body;
+        const { id_proveedor, ...supplierData } = req.body;
 
-        if (id_proveedor  === 0 || !id_proveedor ) {
-            // Crear cliente si no hay ID o si es 0
-            const newItem = await createSupplierQuery(TABLE, supplierData);
-            message = 'Proveedor creado con éxito';
+        if (!id_proveedor) {
+            // Crear un nuevo proveedor
+            const newSupplier = await Proveedor.create(supplierData);
+            return successAnswer(req, res, "Proveedor creado con éxito" , 201);
         } else {
-            // Actualizar cliente si hay un ID
-            const updatedItem = await updateSupplierQuery(TABLE, supplierData, id_proveedor );
-            message = 'Proveedor actualizado con éxito';
+            // Actualizar un proveedor existente
+            const [updatedRows] = await Proveedor.update(supplierData, {
+                where: { id_proveedor },
+            });
+
+            if (updatedRows === 0) {
+                return res.status(404).json({ error: "Proveedor no encontrado para actualizar" });
+            }
+
+            successAnswer(req, res, { message: "Proveedor actualizado con éxito" }, 200);
         }
-        successAnswer(req, res, message, 201);
     } catch (error) {
-        console.error(error);
         next(error);
     }
-}
+};
 
-export{
+// Eliminar un proveedor por ID
+const deleteSupplierById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const deletedRows = await Proveedor.destroy({
+            where: { id_proveedor: id },
+        });
+
+        if (deletedRows === 0) {
+            return res.status(404).json({ error: "Proveedor no encontrado para eliminar" });
+        }
+
+        successAnswer(req, res, { message: "Proveedor eliminado correctamente" }, 200);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export {
     getSuppliers,
     getSupplierById,
     createOrUpdateSupplier,
     deleteSupplierById
-}
+};
