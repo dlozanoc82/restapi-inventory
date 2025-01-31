@@ -10,9 +10,16 @@ import { authenticateToken, authorizeRole } from "../middleware/authMiddleware.j
 
 //Rutas
 const router = express.Router();
-router.get("/", authenticateToken, authorizeRole('admin'), getAllUsersController);
-router.get("/:id", authenticateToken, authorizeRole('admin'), getUserByIdController);
-router.delete('/:id', authenticateToken, authorizeRole('admin'), deleteUserController)
-router.post('/', authenticateToken, authorizeRole('admin'), createOrUpdateUserController)
+
+router.get("/", getAllUsersController);
+router.get("/:id", getUserByIdController);
+router.delete('/:id', deleteUserController)
+router.post('/', createOrUpdateUserController)
+
+
+// router.get("/", authenticateToken, authorizeRole('admin'), getAllUsersController);
+// router.get("/:id", authenticateToken, authorizeRole('admin'), getUserByIdController);
+// router.delete('/:id', authenticateToken, authorizeRole('admin'), deleteUserController)
+// router.post('/', authenticateToken, authorizeRole('admin'), createOrUpdateUserController)
 
 export default router;

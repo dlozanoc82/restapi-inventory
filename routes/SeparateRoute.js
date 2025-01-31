@@ -11,8 +11,6 @@ import {
 
 const router = express.Router();
 
-
-
 router.get('/apartados', getApartados);
 router.get('/apartados/:id', getApartadoById);
 router.post('/apartados', createApartado);

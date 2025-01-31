@@ -1,6 +1,8 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+
+
 import { config } from "./config/config.js";
 import AuthRoute from "./routes/AuthRoute.js";
 import ClientRoute from "./routes/ClientRoute.js"
@@ -17,6 +19,7 @@ import errorsMessages from "./helpers/errorsMessages.js";
 const app = express();
 
 //Configuracion de CORS
+app.use('/public', express.static('public'));
 console.log(config.corsOptions)
 app.use(cors(config.corsOptions))
 

@@ -63,9 +63,52 @@ const createOrUpdateProduct = async (req, res, next) => {
     }
 };
 
+const createOrUpdateProduct2 = async (req, res, next) => {
+    try {
+        // Obtener los datos del body y el archivo subido (si existe)
+        const { id_producto, ...productData } = req.body;
+
+        // Si hay un archivo subido, agregar el nombre del archivo a los datos del producto
+        if (req.file) {
+            productData.imagen_producto = req.file.filename;
+        }
+
+        let message;
+        if (!id_producto) {
+            // Crear producto con imagen (si existe una)
+            await Producto.create(productData);
+            message = "Producto creado con éxito";
+        } else {
+            // Actualizar producto (con o sin imagen)
+            const existingProduct = await Producto.findByPk(id_producto);
+
+            if (!existingProduct) {
+                return res.status(404).json({ message: "Producto no encontrado" });
+            }
+
+            // Conservar la imagen existente si no se sube una nueva
+            if (!req.file) {
+                productData.imagen_producto = existingProduct.imagen_producto;
+            }
+
+            const [rowsUpdated] = await Producto.update(productData, {
+                where: { id_producto },
+            });
+
+            message = "Producto actualizado con éxito";
+        }
+
+        // Responder con el mensaje de éxito
+        successAnswer(req, res, message, 201);
+    } catch (error) {
+        next(error);
+    }
+};
+
 export {
     deleteProductById,
     createOrUpdateProduct,
+    createOrUpdateProduct2,
     getProductById,
     getProducts,
 };
