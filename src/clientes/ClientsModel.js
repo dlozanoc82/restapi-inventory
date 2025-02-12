@@ -48,4 +48,5 @@ const Cliente = sequelize.define('Cliente', {
     timestamps: false, // No auto timestamps (createdAt, updatedAt)
 });
 
+
 export default Cliente;

@@ -45,9 +45,9 @@ const Apartado = sequelize.define('Apartado', {
 });
 
 Cliente.hasMany(Apartado, { foreignKey: 'id_cliente' });
-Apartado.belongsTo(Cliente, { foreignKey: 'id_cliente' });
+Apartado.belongsTo(Cliente, { foreignKey: 'id_cliente', as: 'cliente' });
 
 Usuario.hasMany(Apartado, { foreignKey: 'id_usuario' });
-Apartado.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+Apartado.belongsTo(Usuario, { foreignKey: 'id_usuario', as: 'vendedor' });
 
 export default Apartado;

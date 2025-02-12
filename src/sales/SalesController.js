@@ -2,6 +2,11 @@ import Sale from './Sales.js';
 import SaleDetail from './SalesDetail.js'
 import sequelize from '../../config/dbs.js'; 
 import { errorAnswer, successAnswer } from '../../helpers/answersApi.js';
+import Cliente from '../clientes/ClientsModel.js';
+import Usuario from '../usuarios/UsersModel.js';
+import MedioDePago from '../medios_pago/MeansPaymentModel.js';
+import Producto from '../productos/ProductModel.js';
+
 
 /**
  * Crear una nueva venta con sus detalles.
@@ -33,23 +38,62 @@ export const createSale = async (req, res) => {
     }
 };
 
+
 /**
  * Listar todas las ventas con sus detalles.
  */
 export const listSales = async (req, res) => {
     try {
         const sales = await Sale.findAll({
-            include: {
-                model: SaleDetail,
-                required: false,
-            },
+            include: [ 
+                {
+                    model: SaleDetail,
+                    as: 'sale_details',
+                    required: false,
+                },
+                {
+                    model: Cliente,
+                    as: 'cliente',
+                    attributes: ['nombre_cliente', 'apellido_cliente']
+                },
+                {
+                    model: Usuario,
+                    as: 'vendedor',
+                    attributes: ['nombre_usuario', 'apellido_usuario']
+                },
+                {
+                    model: MedioDePago,
+                    as: 'medio_pago',
+                    attributes: ['nombre_mdspagos']
+                }
+
+            ]
         });
-        successAnswer(req,res, sales, 200);
+
+        const formattedSales =  await sales.map(sale => ({
+            id_venta: sale.id_venta,
+            fecha_venta: sale.fecha_venta,
+            total: sale.total,
+            cliente: sale.cliente ? `${sale.cliente.nombre_cliente} ${sale.cliente.apellido_cliente}` : null,
+            medio_pago: sale.medio_pago ? sale.medio_pago.nombre_mdspagos : null,
+            vendedor: sale.vendedor ? `${sale.vendedor.nombre_usuario} ${sale.vendedor.apellido_usuario}` : null,
+            sale_details: sale.sale_details.map(detail => ({
+                id_detalle: detail.id_detalle,
+                id_venta: detail.id_venta,
+                id_producto: detail.id_producto,
+                cantidad: detail.cantidad,
+                precio_unitario: detail.precio_unitario,
+                subtotal: detail.subtotal,
+            }))
+        }));
+
+        successAnswer(req,res, formattedSales, 200);
     } catch (error) {
         console.error('[listSales] Error:', error);
         errorAnswer(req, res, 'Error al obtener las ventas', 500);
     }
 };
+
 
 /**
  * Obtener una venta específica con sus detalles.
@@ -59,21 +103,92 @@ export const getSaleById = async (req, res) => {
 
     try {
         const sale = await Sale.findByPk(id, {
+            include: [
+                {
+                    model: SaleDetail,
+                    as: 'sale_details',
+                    required: false,
+                },
+                {
+                    model: Cliente,
+                    as: 'cliente',
+                    attributes: ['nombre_cliente', 'apellido_cliente']
+                },
+                {
+                    model: Usuario,
+                    as: 'vendedor',
+                    attributes: ['nombre_usuario', 'apellido_usuario']
+                },
+                {
+                    model: MedioDePago,
+                    as: 'medio_pago',
+                    attributes: ['nombre_mdspagos']
+                }
+            ]
+        });
+
+        if (!sale) {
+            return errorAnswer(req, res, 'Venta no encontrada', 404);
+        }
+
+        // Formatear la respuesta correctamente
+        const formattedSale = {
+            id_venta: sale.id_venta,
+            fecha_venta: sale.fecha_venta,
+            total: sale.total,
+            cliente: sale.cliente ? `${sale.cliente.nombre_cliente} ${sale.cliente.apellido_cliente}` : null,
+            medio_pago: sale.medio_pago ? sale.medio_pago.nombre_mdspagos : null,
+            vendedor: sale.vendedor ? `${sale.vendedor.nombre_usuario} ${sale.vendedor.apellido_usuario}` : null,
+            sale_details: sale.sale_details.map(detail => ({
+                id_detalle: detail.id_detalle,
+                id_venta: detail.id_venta,
+                id_producto: detail.id_producto,
+                cantidad: detail.cantidad,
+                precio_unitario: detail.precio_unitario,
+                subtotal: detail.subtotal,
+            }))
+        };
+
+        successAnswer(req, res, formattedSale, 200);
+    } catch (error) {
+        console.error('[getSaleById] Error:', error);
+        errorAnswer(req, res, 'Error al obtener la venta', 500);
+    }
+};
+
+
+/**
+ * Obtener los detalles de una venta específica con sus detalles.
+ */
+export const getSaleDetailById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const sale = await Sale.findByPk(id, {
             include: {
                 model: SaleDetail,
                 required: false,
+                as: 'sale_details',
+                include: {
+                    model: Producto,
+                    required: false,
+                    as: 'producto',
+                    attributes: ['nombre_producto', 'imagen_producto']
+                }
             },
         });
 
         if (!sale) {
             return errorAnswer(req, res, 'Venta no encontrada', 404);
         }
-        successAnswer(req,res, sale, 200);
+
+        successAnswer(req,res, sale.sale_details, 200);
     } catch (error) {
         console.error('[getSaleById] Error:', error);
         errorAnswer(req, res, 'Error al obtener las venta', 500);
     }
 };
+
 
 /**
  * Eliminar una venta y sus detalles asociados.
@@ -100,6 +215,7 @@ export const deleteSale = async (req, res) => {
         errorAnswer(req,res,'Error al eliminar la venta', 500);
     }
 };
+
 
 /**
  * Actualizar detalles de una venta.

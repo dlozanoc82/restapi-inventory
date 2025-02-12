@@ -3,6 +3,9 @@ import DetalleApartado from './SeparateDetailsModel.js';
 import AbonoApartado from './SeparatePaymentsModel.js';
 import sequelize from '../../config/dbs.js'; 
 import { errorAnswer, successAnswer } from '../../helpers/answersApi.js';
+import Producto from '../productos/ProductModel.js';
+import Cliente from '../clientes/ClientsModel.js';
+import Usuario from '../usuarios/UsersModel.js';
 
 /**
  * Crear un nuevo apartado con sus detalles.
@@ -44,14 +47,46 @@ const getApartados = async (req, res) => {
                 {
                     model: DetalleApartado,
                     required: false,
+                    as: 'apartado_details',
                 },
                 {
                     model: AbonoApartado,
-                    required: false
-                }
+                    required: false,
+                    as: 'abono_details'
+                },
+                {
+                    model: Cliente,
+                    as: 'cliente',
+                    attributes: ['nombre_cliente', 'apellido_cliente']
+                },
+                {
+                    model: Usuario,
+                    as: 'vendedor',
+                    attributes: ['nombre_usuario', 'apellido_usuario']
+                },
             ],
         });
-        successAnswer(req, res, apartados, 200);
+
+
+        const formattedApartados =  await apartados.map(apartado => ({
+            id_apartado: apartado.id_apartado,
+            fecha_apartado: apartado.fecha_apartado,
+            total: apartado.total,
+            cliente: apartado.cliente ? `${apartado.cliente.nombre_cliente} ${apartado.cliente.apellido_cliente}` : null,
+            vendedor: apartado.vendedor ? `${apartado.vendedor.nombre_usuario} ${apartado.vendedor.apellido_usuario}` : null,
+            estado_apartado: apartado.estado_apartado,
+            apartado_details: apartado.apartado_details.map(detail => ({
+                id_detalle: detail.id_detalle,
+                id_apartado: detail.id_apartado,
+                id_producto: detail.id_producto,
+                cantidad: detail.cantidad,
+                precio_unitario: detail.precio_unitario,
+                subtotal: detail.subtotal,
+            }))
+        }));
+
+
+        successAnswer(req, res, formattedApartados, 200);
     } catch (error) {
         console.error('[listApartados] Error:', error);
         errorAnswer(req, res, 'Error al obtener los apartados', 500);
@@ -70,23 +105,115 @@ const getApartadoById = async (req, res) => {
                 {
                     model: DetalleApartado,
                     required: false,
+                    as: 'apartado_details',
                 },
                 {
                     model: AbonoApartado,
-                    required: false
-                }
+                    required: false,
+                    as: 'abono_details'
+                },
+                {
+                    model: Cliente,
+                    as: 'cliente',
+                    attributes: ['nombre_cliente', 'apellido_cliente']
+                },
+                {
+                    model: Usuario,
+                    as: 'vendedor',
+                    attributes: ['nombre_usuario', 'apellido_usuario']
+                },
             ],
         });
 
         if (!apartado) {
             return errorAnswer(req, res, 'Apartado no encontrado', 404);
         }
-        successAnswer(req, res, apartado, 200);
+
+        const formattedApartado = {
+            id_apartado: apartado.id_apartado,
+            fecha_apartado: apartado.fecha_apartado,
+            total: apartado.total,
+            cliente: apartado.cliente ? `${apartado.cliente.nombre_cliente} ${apartado.cliente.apellido_cliente}` : null,
+            vendedor: apartado.vendedor ? `${apartado.vendedor.nombre_usuario} ${apartado.vendedor.apellido_usuario}` : null,
+            estado_apartado: apartado.estado_apartado,
+            apartado_details: apartado.apartado_details.map(detail => ({
+                id_detalle: detail.id_detalle,
+                id_apartado: detail.id_apartado,
+                id_producto: detail.id_producto,
+                cantidad: detail.cantidad,
+                precio_unitario: detail.precio_unitario,
+                subtotal: detail.subtotal,
+            }))
+        };
+
+
+        successAnswer(req, res, formattedApartado, 200);
     } catch (error) {
         console.error('[getApartadoById] Error:', error);
         errorAnswer(req, res, 'Error al obtener el apartado', 500);
     }
 };
+
+
+/**
+ * Obtener un apartado específico con sus detalles.
+ */
+const getApartadoDetailsById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const apartado = await Apartado.findByPk(id, {
+            include: {
+                model: DetalleApartado,
+                required: false,
+                as: 'apartado_details',
+                include: {
+                    model: Producto,
+                    required: false,
+                    as: 'producto',
+                    attributes: ['nombre_producto', 'imagen_producto']
+                }
+            },
+        });
+
+        if (!apartado) {
+            return errorAnswer(req, res, 'Apartado no encontrado', 404);
+        }
+        successAnswer(req, res, apartado.apartado_details, 200);
+    } catch (error) {
+        console.error('[getApartadoById] Error:', error);
+        errorAnswer(req, res, 'Error al obtener el apartado', 500);
+    }
+};
+
+
+
+/**
+ * Obtener un apartado específico con sus detalles.
+ */
+const getApartadoAbonosById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const apartado = await Apartado.findByPk(id, {
+            include: {
+                model: AbonoApartado,
+                required: false,
+                as: 'abono_details'
+            },
+        });
+
+        if (!apartado) {
+            return errorAnswer(req, res, 'Apartado no encontrado', 404);
+        }
+        successAnswer(req, res, apartado.abono_details, 200);
+    } catch (error) {
+        console.error('[getApartadoById] Error:', error);
+        errorAnswer(req, res, 'Error al obtener el apartado', 500);
+    }
+};
+
+
 
 /**
  * Eliminar un apartado y sus detalles asociados.
@@ -196,5 +323,7 @@ export{
     deleteApartado,
     updateApartadoDetails,
     createAbono,
-    updateAbono
+    updateAbono,
+    getApartadoDetailsById,
+    getApartadoAbonosById
 }

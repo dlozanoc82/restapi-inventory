@@ -39,7 +39,7 @@ const AbonoApartado = sequelize.define('AbonoApartado', {
     timestamps: false,
 });
 
-Apartado.hasMany(AbonoApartado, { foreignKey: 'id_apartado' });
+Apartado.hasMany(AbonoApartado, { as: 'abono_details', foreignKey: 'id_apartado' });
 AbonoApartado.belongsTo(Apartado, { foreignKey: 'id_apartado' });
 
 MedioDePago.hasMany(AbonoApartado, { foreignKey: 'id_mdspago' });

@@ -42,10 +42,10 @@ const DetalleApartado = sequelize.define('DetalleApartado', {
     timestamps: false,
 });
 
-Apartado.hasMany(DetalleApartado, { foreignKey: 'id_apartado' });
+Apartado.hasMany(DetalleApartado, { as: 'apartado_details', foreignKey: 'id_apartado' });
 DetalleApartado.belongsTo(Apartado, { foreignKey: 'id_apartado' });
 
 Producto.hasMany(DetalleApartado, { foreignKey: 'id_producto' });
-DetalleApartado.belongsTo(Producto, { foreignKey: 'id_producto' });
+DetalleApartado.belongsTo(Producto, { foreignKey: 'id_producto',  as: 'producto' });
 
 export default DetalleApartado;
