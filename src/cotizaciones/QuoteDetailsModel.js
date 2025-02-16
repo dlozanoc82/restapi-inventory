@@ -42,10 +42,10 @@ const DetalleCotizacion = sequelize.define('DetalleCotizacion', {
     timestamps: false,
 });
 
-Cotizacion.hasMany(DetalleCotizacion, { foreignKey: 'id_cotizacion' });
-DetalleCotizacion.belongsTo(Cotizacion, { foreignKey: 'id_cotizacion' });
+Cotizacion.hasMany(DetalleCotizacion, { as: 'cotizacion_details', foreignKey: 'id_cotizacion' });
+DetalleCotizacion.belongsTo(Cotizacion, {  foreignKey: 'id_cotizacion' });
 
 Producto.hasMany(DetalleCotizacion, { foreignKey: 'id_producto' });
-DetalleCotizacion.belongsTo(Producto, { foreignKey: 'id_producto' });
+DetalleCotizacion.belongsTo(Producto, { as: 'producto', foreignKey: 'id_producto' });
 
 export default DetalleCotizacion;

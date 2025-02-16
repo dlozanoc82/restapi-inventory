@@ -6,6 +6,7 @@ import { errorAnswer, successAnswer } from '../../helpers/answersApi.js';
 import Producto from '../productos/ProductModel.js';
 import Cliente from '../clientes/ClientsModel.js';
 import Usuario from '../usuarios/UsersModel.js';
+import MedioDePago from '../medios_pago/MeansPaymentModel.js';
 
 /**
  * Crear un nuevo apartado con sus detalles.
@@ -199,21 +200,36 @@ const getApartadoAbonosById = async (req, res) => {
             include: {
                 model: AbonoApartado,
                 required: false,
-                as: 'abono_details'
+                as: 'abono_details',
+                include: {
+                    model: MedioDePago,
+                    required: false,
+                    as: 'medio_pago',
+                    attributes: ['nombre_mdspagos']
+                }
             },
         });
 
         if (!apartado) {
             return errorAnswer(req, res, 'Apartado no encontrado', 404);
         }
-        successAnswer(req, res, apartado.abono_details, 200);
+
+        successAnswer(req, res,transformarRespuesta(apartado.abono_details), 200);
     } catch (error) {
         console.error('[getApartadoById] Error:', error);
         errorAnswer(req, res, 'Error al obtener el apartado', 500);
     }
 };
 
-
+function transformarRespuesta(respuestaOriginal) {
+    return respuestaOriginal.map(item => ({
+      id_abono: item.id_abono,
+      fecha_abono: item.fecha_abono,
+      monto_abono: item.monto_abono,
+      id_apartado: item.id_apartado,
+      medio_pago: item.medio_pago.nombre_mdspagos
+    }));
+}
 
 /**
  * Eliminar un apartado y sus detalles asociados.

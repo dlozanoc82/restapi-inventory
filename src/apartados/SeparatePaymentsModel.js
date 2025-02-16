@@ -43,6 +43,6 @@ Apartado.hasMany(AbonoApartado, { as: 'abono_details', foreignKey: 'id_apartado'
 AbonoApartado.belongsTo(Apartado, { foreignKey: 'id_apartado' });
 
 MedioDePago.hasMany(AbonoApartado, { foreignKey: 'id_mdspago' });
-AbonoApartado.belongsTo(MedioDePago, { foreignKey: 'id_mdspago' });
+AbonoApartado.belongsTo(MedioDePago, { as: 'medio_pago', foreignKey: 'id_mdspago' });
 
 export default AbonoApartado;

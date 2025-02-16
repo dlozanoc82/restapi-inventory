@@ -1,3 +1,4 @@
+import PDFDocument from 'pdfkit';
 import Sale from './Sales.js';
 import SaleDetail from './SalesDetail.js'
 import sequelize from '../../config/dbs.js'; 
@@ -6,6 +7,7 @@ import Cliente from '../clientes/ClientsModel.js';
 import Usuario from '../usuarios/UsersModel.js';
 import MedioDePago from '../medios_pago/MeansPaymentModel.js';
 import Producto from '../productos/ProductModel.js';
+import { generateCustomerInformation, generateFooter, generateHeader, generateInvoiceTable } from '../../helpers/pdfGenerator.js';
 
 
 /**
@@ -107,7 +109,11 @@ export const getSaleById = async (req, res) => {
                 {
                     model: SaleDetail,
                     as: 'sale_details',
-                    required: false,
+                    include: {
+                        model: Producto,
+                        as: 'producto',
+                        attributes: ['nombre_producto']
+                    }
                 },
                 {
                     model: Cliente,
@@ -131,21 +137,17 @@ export const getSaleById = async (req, res) => {
             return errorAnswer(req, res, 'Venta no encontrada', 404);
         }
 
-        // Formatear la respuesta correctamente
+        // Formatear respuesta
         const formattedSale = {
             id_venta: sale.id_venta,
             fecha_venta: sale.fecha_venta,
             total: sale.total,
-            cliente: sale.cliente ? `${sale.cliente.nombre_cliente} ${sale.cliente.apellido_cliente}` : null,
-            medio_pago: sale.medio_pago ? sale.medio_pago.nombre_mdspagos : null,
-            vendedor: sale.vendedor ? `${sale.vendedor.nombre_usuario} ${sale.vendedor.apellido_usuario}` : null,
+            cliente: sale.cliente ? `${sale.cliente.nombre_cliente} ${sale.cliente.apellido_cliente}` : 'No especificado',
+            medio_pago: sale.medio_pago ? sale.medio_pago.nombre_mdspagos : 'No especificado',
+            vendedor: sale.vendedor ? `${sale.vendedor.nombre_usuario} ${sale.vendedor.apellido_usuario}` : 'No especificado',
             sale_details: sale.sale_details.map(detail => ({
-                id_detalle: detail.id_detalle,
-                id_venta: detail.id_venta,
-                id_producto: detail.id_producto,
-                cantidad: detail.cantidad,
-                precio_unitario: detail.precio_unitario,
-                subtotal: detail.subtotal,
+                ...detail.get({ plain: true }),
+                nombre_producto: detail.producto.nombre_producto
             }))
         };
 
@@ -153,6 +155,80 @@ export const getSaleById = async (req, res) => {
     } catch (error) {
         console.error('[getSaleById] Error:', error);
         errorAnswer(req, res, 'Error al obtener la venta', 500);
+    }
+};
+
+export const generateInvoice = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Buscar la venta directamente en la base de datos
+        const saleResponse = await Sale.findByPk(id, {
+            include: [
+                {
+                    model: SaleDetail,
+                    as: 'sale_details',
+                    include: {
+                        model: Producto,
+                        as: 'producto',
+                        attributes: ['nombre_producto']
+                    }
+                },
+                {
+                    model: Cliente,
+                    as: 'cliente',
+                    attributes: ['nombre_cliente', 'apellido_cliente']
+                },
+                {
+                    model: Usuario,
+                    as: 'vendedor',
+                    attributes: ['nombre_usuario', 'apellido_usuario']
+                },
+                {
+                    model: MedioDePago,
+                    as: 'medio_pago',
+                    attributes: ['nombre_mdspagos']
+                }
+            ]
+        });
+
+        if (!saleResponse) {
+            return errorAnswer(req, res, 'Venta no encontrada', 404);
+        }
+
+        // Formatear la respuesta
+        const saleData = {
+            id_venta: saleResponse.id_venta,
+            fecha_venta: saleResponse.fecha_venta,
+            total: saleResponse.total,
+            cliente: saleResponse.cliente ? `${saleResponse.cliente.nombre_cliente} ${saleResponse.cliente.apellido_cliente}` : 'No especificado',
+            medio_pago: saleResponse.medio_pago ? saleResponse.medio_pago.nombre_mdspagos : 'No especificado',
+            vendedor: saleResponse.vendedor ? `${saleResponse.vendedor.nombre_usuario} ${saleResponse.vendedor.apellido_usuario}` : 'No especificado',
+            sale_details: saleResponse.sale_details.map(detail => ({
+                ...detail.get({ plain: true }),
+                nombre_producto: detail.producto.nombre_producto
+            }))
+        };
+
+
+        // Configurar documento PDF
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="factura_${saleData.id_venta}.pdf"`);
+
+        doc.pipe(res);
+
+        // Generar PDF
+        generateHeader(doc);
+        generateCustomerInformation(doc, saleData);
+        generateInvoiceTable(doc, saleData);
+        generateFooter(doc);
+
+        doc.end();
+    } catch (error) {
+        console.error('[generateInvoice] Error:', error);
+        errorAnswer(req, res, 'Error generando el PDF', 500);
     }
 };
 

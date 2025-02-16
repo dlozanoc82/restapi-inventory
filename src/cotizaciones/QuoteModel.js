@@ -1,6 +1,7 @@
 import { DataTypes } from 'sequelize';
 import Cliente from '../clientes/ClientsModel.js';
 import sequelize from '../../config/dbs.js';
+import Usuario from '../usuarios/UsersModel.js';
 
 const Cotizacion = sequelize.define('Cotizacion', {
     id_cotizacion: {
@@ -21,6 +22,14 @@ const Cotizacion = sequelize.define('Cotizacion', {
             key: 'id_cliente',
         },
     },
+    id_usuario: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: Usuario,
+            key: 'id_usuario',
+        },
+    },
     total: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
@@ -36,6 +45,9 @@ const Cotizacion = sequelize.define('Cotizacion', {
 });
 
 Cliente.hasMany(Cotizacion, { foreignKey: 'id_cliente' });
-Cotizacion.belongsTo(Cliente, { foreignKey: 'id_cliente' });
+Cotizacion.belongsTo(Cliente, { as: 'cliente', foreignKey: 'id_cliente' });
+
+Usuario.hasMany(Cotizacion, { foreignKey: 'id_usuario' });
+Cotizacion.belongsTo(Usuario, { as: 'vendedor', foreignKey: 'id_usuario' });
 
 export default Cotizacion;

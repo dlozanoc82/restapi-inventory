@@ -2,6 +2,9 @@ import Cotizacion from './QuoteModel.js';
 import DetalleCotizacion from './QuoteDetailsModel.js';
 import sequelize from '../../config/dbs.js'; 
 import { errorAnswer, successAnswer } from '../../helpers/answersApi.js';
+import Cliente from '../clientes/ClientsModel.js';
+import Usuario from '../usuarios/UsersModel.js';
+import Producto from '../productos/ProductModel.js';
 
 /**
  * Crear una nueva cotización con sus detalles.
@@ -39,12 +42,35 @@ export const createQuote = async (req, res) => {
 export const listQuotes = async (req, res) => {
     try {
         const quotes = await Cotizacion.findAll({
-            include: {
-                model: DetalleCotizacion,
-                required: false,
-            },
+            include: [
+                {
+                    model: Cliente,
+                    as: 'cliente',
+                    attributes: ['nombre_cliente', 'apellido_cliente']
+                },
+                {
+                    model: Usuario,
+                    as: 'vendedor',
+                    attributes: ['nombre_usuario', 'apellido_usuario']
+                },
+                {
+                    model: DetalleCotizacion,
+                    required: false,
+                    as: 'cotizacion_details',
+                }
+            ]
         });
-        successAnswer(req, res, quotes, 200);
+
+        const formattedQuotes = quotes.map(quote => {
+            const plainQuote = quote.get({ plain: true }); // Convertir a objeto plano
+            return {
+                ...plainQuote,
+                cliente: `${plainQuote.cliente.nombre_cliente} ${plainQuote.cliente.apellido_cliente}`,
+                vendedor: `${plainQuote.vendedor.nombre_usuario} ${plainQuote.vendedor.apellido_usuario}`
+            };
+        });
+
+        successAnswer(req, res, formattedQuotes, 200);
     } catch (error) {
         console.error('[listQuotes] Error:', error);
         errorAnswer(req, res, 'Error al obtener las cotizaciones', 500);
@@ -59,10 +85,23 @@ export const getQuoteById = async (req, res) => {
 
     try {
         const quote = await Cotizacion.findByPk(id, {
-            include: {
-                model: DetalleCotizacion,
-                required: false,
-            },
+            include: [
+                {
+                    model: DetalleCotizacion,
+                    required: false,
+                    as: 'cotizacion_details',
+                },
+                {
+                    model: Cliente,
+                    as: 'cliente',
+                    attributes: ['nombre_cliente', 'apellido_cliente']
+                },
+                {
+                    model: Usuario,
+                    as: 'vendedor',
+                    attributes: ['nombre_usuario', 'apellido_usuario']
+                },
+            ]
         });
 
         if (!quote) {
@@ -74,6 +113,40 @@ export const getQuoteById = async (req, res) => {
         errorAnswer(req, res, 'Error al obtener la cotización', 500);
     }
 };
+
+
+/**
+ * Obtener los detalles de una venta específica con sus detalles.
+ */
+export const getQuoteDetailById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const quote = await Cotizacion.findByPk(id, {
+            include: {
+                model: DetalleCotizacion,
+                required: false,
+                as: 'cotizacion_details',
+                include: {
+                    model: Producto,
+                    required: false,
+                    as: 'producto',
+                    attributes: ['nombre_producto', 'imagen_producto']
+                }
+            },
+        });
+
+        if (!quote) {
+            return errorAnswer(req, res, 'Venta no encontrada', 404);
+        }
+
+        successAnswer(req,res, quote.cotizacion_details, 200);
+    } catch (error) {
+        console.error('[getSaleById] Error:', error);
+        errorAnswer(req, res, 'Error al obtener las venta', 500);
+    }
+};
+
 
 /**
  * Eliminar una cotización y sus detalles asociados.
