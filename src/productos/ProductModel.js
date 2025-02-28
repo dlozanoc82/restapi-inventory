@@ -28,6 +28,15 @@ const Producto = sequelize.define('Producto', {
         defaultValue: 0,
         allowNull: true,
     },
+    garantia: {
+        type: DataTypes.TINYINT(1),
+        defaultValue: false,
+        allowNull: false,
+    },
+    duracion_garantia: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
     fecha_creacion: {
         type: DataTypes.DATE,
         defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),

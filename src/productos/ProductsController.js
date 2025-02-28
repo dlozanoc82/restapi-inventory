@@ -4,7 +4,9 @@ import Producto from "./ProductModel.js"; // Modelo de Sequelize
 // Obtiene los datos de todos los productos
 const getProducts = async (req, res, next) => {
     try {
-        const products = await Producto.findAll(); // Consulta todos los registros
+        const products = await Producto.findAll({
+            order: [['id_producto', 'DESC']],
+        }); // Consulta todos los registros
         successAnswer(req, res, products, 200);
     } catch (error) {
         next(error);
@@ -40,35 +42,10 @@ const deleteProductById = async (req, res, next) => {
 // Crea o actualiza un producto
 const createOrUpdateProduct = async (req, res, next) => {
     try {
+        // Obtener los datos del body y el archivo cargado (si existe)
         const { id_producto, ...productData } = req.body;
 
-        let message;
-        if (!id_producto) {
-            // Crear producto
-            await Producto.create(productData);
-            message = "Producto creado con éxito";
-        } else {
-            // Actualizar producto
-            const [rowsUpdated] = await Producto.update(productData, {
-                where: { id_producto },
-            });
-            if (rowsUpdated === 0) {
-                return res.status(404).json({ message: "Producto no encontrado" });
-            }
-            message = "Producto actualizado con éxito";
-        }
-        successAnswer(req, res, message, 201);
-    } catch (error) {
-        next(error);
-    }
-};
-
-const createOrUpdateProduct2 = async (req, res, next) => {
-    try {
-        // Obtener los datos del body y el archivo subido (si existe)
-        const { id_producto, ...productData } = req.body;
-
-        // Si hay un archivo subido, agregar el nombre del archivo a los datos del producto
+        // Si hay un archivo cargado, agregar el nombre del archivo a los datos del producto
         if (req.file) {
             productData.imagen_producto = req.file.filename;
         }
@@ -108,7 +85,6 @@ const createOrUpdateProduct2 = async (req, res, next) => {
 export {
     deleteProductById,
     createOrUpdateProduct,
-    createOrUpdateProduct2,
     getProductById,
     getProducts,
 };
