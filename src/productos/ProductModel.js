@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../../config/dbs.js';
+import Subcategoria from '../categorias/SubCategoriesModel.js';
 
 const Producto = sequelize.define('Producto', {
     id_producto: {
@@ -47,9 +48,20 @@ const Producto = sequelize.define('Producto', {
         defaultValue: 1,
         allowNull: true,
     },
+    id_subcategoria: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Subcategoria,
+            key: 'id_subcategoria',
+        },
+    },
 }, {
     tableName: 'productos',
     timestamps: false,
 });
+
+Producto.belongsTo(Subcategoria, { foreignKey: 'id_subcategoria', as: 'subcategoria' });
+Subcategoria.hasMany(Producto, { foreignKey: 'id_subcategoria' });
 
 export default Producto;

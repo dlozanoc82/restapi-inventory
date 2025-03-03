@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
-import Producto from './Producto.js';
-import Proveedor from './Proveedor.js';
+import Producto from '../productos/ProductModel.js';
+import Proveedor from '../proveedores/ProveedorModel.js';
 import sequelize from '../../config/dbs.js';
 
 const Adquisicion = sequelize.define('Adquisicion', {
@@ -26,6 +26,10 @@ const Adquisicion = sequelize.define('Adquisicion', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         // Sequelize does not support computed columns directly, but you can manage this in queries or with hooks.
+    },
+    precio_venta: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
     },
     id_producto: {
         type: DataTypes.INTEGER,
