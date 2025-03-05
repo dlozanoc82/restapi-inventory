@@ -4,11 +4,8 @@ import {
     getCategoryById,
     deleteCategoryById,
     createOrUpdateCategory,
-    getSubcategories,
-    getSubcategoryById,
-    deleteSubcategoryById,
-    createOrUpdateSubcategory
 } from "../src/categorias/CategoriesController.js"; // Asegúrate de que la ruta del archivo sea correcta
+import { createOrUpdateSubcategory, deleteSubcategoryById, getSubcategories, getSubcategoriesByCategoryId, getSubcategoryById } from "../src/subcategorias/SubcategoriesController.js";
 
 const router = express.Router();
 
@@ -21,6 +18,7 @@ router.post("/categorias", createOrUpdateCategory);
 // Routes for Subcategories
 router.get("/subcategorias", getSubcategories); // Cambié la ruta para obtener todas las subcategorías
 router.get("/subcategorias/:id", getSubcategoryById);
+router.get("/subcategorias/categoria/:id", getSubcategoriesByCategoryId);
 router.delete("/subcategorias/:id", deleteSubcategoryById);
 router.post("/subcategorias", createOrUpdateSubcategory);
 

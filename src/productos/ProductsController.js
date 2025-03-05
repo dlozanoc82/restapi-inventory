@@ -1,7 +1,7 @@
 // ProductController.js
 import { successAnswer } from "../../helpers/answersApi.js";
 import Producto from "./ProductModel.js";
-import Subcategoria from "../categorias/SubCategoriesModel.js";
+import Subcategoria from "../subcategorias/SubCategoriesModel.js";
 import Categoria from "../categorias/CategoriaModel.js";
 
 // Obtener todos los productos con sus categorías y subcategorías
@@ -98,6 +98,58 @@ const getProductById = async (req, res, next) => {
     }
 };
 
+// Obtener producto por ID Subcategoria
+const getProductsBySubcategoryId = async (req, res, next) => {
+    try {
+        const idSubcategoria = req.params.id;
+
+        const products = await Producto.findAll({
+            where: { id_subcategoria: idSubcategoria }, // Filtrar por subcategoría
+            include: [
+                {
+                    model: Subcategoria,
+                    as: 'subcategoria',
+                    attributes: ['id_subcategoria', 'nombre_subcategoria'],
+                    include: {
+                        model: Categoria,
+                        as: 'categoria',
+                        attributes: ['id_categoria', 'nombre_categoria']
+                    }
+                }
+            ],
+            order: [['id_producto', 'DESC']],
+        });
+
+        if (products.length === 0) {
+            return res.status(404).json({ message: "No hay productos en esta subcategoría" });
+        }
+
+        // Formatear los datos antes de enviarlos
+        const formattedProducts = products.map(product => {
+            const productJSON = product.toJSON();
+            return {
+                id_producto: productJSON.id_producto,
+                nombre_producto: productJSON.nombre_producto,
+                descripcion_producto: productJSON.descripcion_producto,
+                imagen_producto: productJSON.imagen_producto,
+                precio_producto: productJSON.precio_producto,
+                stock: productJSON.stock,
+                garantia: productJSON.garantia,
+                duracion_garantia: productJSON.duracion_garantia,
+                fecha_creacion: productJSON.fecha_creacion,
+                estado: productJSON.estado,
+                id_categoria: productJSON.subcategoria?.categoria?.id_categoria || null,
+                id_subcategoria: productJSON.subcategoria?.id_subcategoria || null,
+                categoria: productJSON.subcategoria?.categoria?.nombre_categoria || "Sin categoría",
+                subcategoria: productJSON.subcategoria?.nombre_subcategoria || "Sin subcategoría"
+            };
+        });
+
+        successAnswer(req, res, formattedProducts, 200);
+    } catch (error) {
+        next(error);
+    }
+};
 
 // Eliminar producto por ID
 const deleteProductById = async (req, res, next) => {
@@ -152,4 +204,5 @@ export {
     createOrUpdateProduct,
     getProductById,
     getProducts,
+    getProductsBySubcategoryId,
 };

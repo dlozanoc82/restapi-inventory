@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../../config/dbs.js';
-import Categoria from './CategoriaModel.js';
+import Categoria from '../categorias/CategoriaModel.js';
 
 const Subcategoria = sequelize.define('Subcategoria', {
     id_subcategoria: {
