@@ -10,9 +10,9 @@ const Adquisicion = sequelize.define('Adquisicion', {
         primaryKey: true,
     },
     fecha_adquisicion: {
-        type: DataTypes.TIMESTAMP,
+        type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
+        defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
     },
     cantidad: {
         type: DataTypes.INTEGER,
@@ -53,9 +53,9 @@ const Adquisicion = sequelize.define('Adquisicion', {
 });
 
 Producto.hasMany(Adquisicion, { foreignKey: 'id_producto' });
-Adquisicion.belongsTo(Producto, { foreignKey: 'id_producto' });
+Adquisicion.belongsTo(Producto, { as: 'producto', foreignKey: 'id_producto' });
 
 Proveedor.hasMany(Adquisicion, { foreignKey: 'id_proveedor' });
-Adquisicion.belongsTo(Proveedor, { foreignKey: 'id_proveedor' });
+Adquisicion.belongsTo(Proveedor, { as: 'proveedor', foreignKey: 'id_proveedor' });
 
 export default Adquisicion;

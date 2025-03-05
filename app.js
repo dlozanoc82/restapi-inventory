@@ -13,6 +13,7 @@ import CategoriesRoute from "./routes/CategoriesRoute.js";
 import MeansPaymentRoute from "./routes/MeansPaymentRoute.js"
 import SeparateRoute from "./routes/SeparateRoute.js"
 import QuoteRoute from "./routes/QuoteRoute.js"
+import ComprasRoute from "./routes/ComprasRoute.js"
 import errorsMessages from "./helpers/errorsMessages.js";
 
 const app = express();
@@ -37,10 +38,11 @@ app.use("/api/usuarios", UserRoute);
 app.use("/api/proveedores", ProveedorRoute);
 app.use("/api/productos", ProductRoute);
 app.use("/api", CategoriesRoute);
-app.use("/api", SalesRoute)
-app.use("/api/medios-de-pago", MeansPaymentRoute)
-app.use("/api", SeparateRoute)
-app.use("/api", QuoteRoute)
+app.use("/api", SalesRoute);
+app.use("/api/medios-de-pago", MeansPaymentRoute);
+app.use("/api", SeparateRoute);
+app.use("/api", QuoteRoute);
+app.use("/api/compras", ComprasRoute);
 app.use(errorsMessages);
 
 export {
