@@ -1,15 +1,35 @@
 import { successAnswer } from "../../helpers/answersApi.js";
+import Categoria from "../categorias/CategoriaModel.js";
 import Subcategoria from "./SubCategoriesModel.js";
 
 // Controlador para Subcategorías
 const getSubcategories = async (req, res, next) => {
     try {
-        const subcategories = await Subcategoria.findAll();
-        successAnswer(req, res, subcategories, 200);
+        const subcategories = await Subcategoria.findAll({
+            include: [
+                {
+                    model: Categoria,
+                    as: 'categoria',
+                    attributes: ['nombre_categoria'], 
+                },
+            ]
+        });
+
+        // Transformar la respuesta para extraer nombre_categoria
+        const formattedSubcategories = subcategories.map(subcat => {
+            const { categoria, ...subcatData } = subcat.get({ plain: true });  
+            return { 
+                ...subcatData, 
+                nombre_categoria: categoria ? categoria.nombre_categoria : null 
+            };
+        });
+
+        successAnswer(req, res, formattedSubcategories, 200);
     } catch (error) {
         next(error);
     }
-}
+};
+
 
 const getSubcategoryById = async (req, res, next) => {
     try {

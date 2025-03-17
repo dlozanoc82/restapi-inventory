@@ -3,6 +3,10 @@ import { successAnswer } from "../../helpers/answersApi.js";
 import Producto from "./ProductModel.js";
 import Subcategoria from "../subcategorias/SubCategoriesModel.js";
 import Categoria from "../categorias/CategoriaModel.js";
+import ExcelJS from 'exceljs';
+import PDFDocument from 'pdfkit';
+import path from 'path'
+import { formatearFecha } from "../../helpers/managmentDates.js";
 
 // Obtener todos los productos con sus categorías y subcategorías
 const getProducts = async (req, res, next) => {
@@ -199,10 +203,170 @@ const createOrUpdateProduct = async (req, res, next) => {
     }
 };
 
+// Reporte en EXCEL
+const exportProductsToExcel = async (req, res, next) => {
+    try {
+        const products = await Producto.findAll({
+            include: [
+                {
+                    model: Subcategoria,
+                    as: 'subcategoria',
+                    attributes: ['id_subcategoria', 'nombre_subcategoria'],
+                    include: {
+                        model: Categoria,
+                        as: 'categoria',
+                        attributes: ['id_categoria', 'nombre_categoria']
+                    }
+                }
+            ]
+        });
+
+        if (!products || products.length === 0) {
+            return res.status(404).json({
+                error: true,
+                status: 404,
+                body: "No hay productos registrados"
+            });
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Productos');
+
+        worksheet.mergeCells('A1:H1');
+        const titleCell = worksheet.getCell('A1');
+        titleCell.value = "LISTADO DE PRODUCTOS";
+        titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+        titleCell.font = { bold: true, size: 20, color: { argb: 'FFFFFF' } };
+        titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '0b5394' } };
+        worksheet.getRow(1).height = 40;
+
+        worksheet.getRow(2).values = [
+            'ID', 'Nombre', 'Descripción', 'Precio', 'Stock', 'Categoría', 'Subcategoría', 'Estado'
+        ];
+        worksheet.getRow(2).height = 20;
+        worksheet.getRow(2).font = { bold: true, size: 14, color: { argb: 'FFFFFF' } };
+
+        const columnWidths = [10, 30, 40, 15, 10, 20, 20, 10];
+        columnWidths.forEach((width, index) => {
+            worksheet.getColumn(index + 1).width = width;
+        });
+
+        products.forEach((product, index) => {
+            worksheet.addRow([
+                index + 1,
+                product.nombre_producto,
+                product.descripcion_producto,
+                product.precio_producto,
+                product.stock,
+                product.subcategoria?.categoria?.nombre_categoria || '',
+                product.subcategoria?.nombre_subcategoria || '',
+                product.estado === 1 ? 'ACTIVO' : 'INACTIVO'
+            ]);
+        });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=productos.xlsx');
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error('Error en exportación:', error);
+        next(error);
+    }
+};
+
+// Reporte en PDF
+const exportProductsToPDF = async (req, res, next) => {
+    try {
+        const products = await Producto.findAll({
+            include: [
+                {
+                    model: Subcategoria,
+                    as: 'subcategoria',
+                    attributes: ['id_subcategoria', 'nombre_subcategoria'],
+                    include: {
+                        model: Categoria,
+                        as: 'categoria',
+                        attributes: ['id_categoria', 'nombre_categoria']
+                    }
+                }
+            ]
+        });
+
+        if (!products || products.length === 0) {
+            return res.status(404).json({
+                error: true,
+                status: 404,
+                body: "No hay productos registrados"
+            });
+        }
+
+        const doc = new PDFDocument({ margin: 50, size: 'A4', layout: 'landscape' });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=productos.pdf');
+        doc.pipe(res);
+
+        // Agregar logo en la parte superior izquierda
+        const logoPath = path.join(process.cwd(), 'public', 'img', 'logo.png');
+        doc.image(logoPath, 50, 30, { width: 80 });
+        
+        // Título del documento
+        doc.fontSize(20).text('LISTADO DE PRODUCTOS', 0, 40, { align: 'center' });
+        
+        // Fecha de generación del reporte
+        const currentDate = new Date();
+        doc.fontSize(12).text(`Fecha de generación: ${formatearFecha(currentDate)}`, 0, 70, { align: 'center' });
+        doc.moveDown();
+                
+
+        const tableHeaders = ['ID', 'Nombre', 'Descripción', 'Precio', 'Stock', 'Categoría', 'Subcategoría', 'Estado'];
+        const columnWidths = [40, 100, 210, 80, 50, 80, 100, 60];
+
+        let y = doc.y + 20;
+        doc.fillColor('#0055A4').rect(50, y, 750, 30).fill();
+        doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(10);
+        tableHeaders.forEach((header, i) => {
+            doc.text(header, 55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), y + 9, {
+                width: columnWidths[i], align: 'left'
+            });
+        });
+        y += 30;
+        doc.moveTo(50, y).lineTo(800, y).stroke('black');
+
+        doc.font('Helvetica').fontSize(9);
+        products.forEach((product, index) => {
+            doc.fillColor(index % 2 === 0 ? '#D0E4F2' : 'white').rect(50, y, 750, 25).fill();
+            doc.fillColor('black');
+            const row = [
+                index + 1,
+                product.nombre_producto,
+                product.descripcion_producto,
+                product.precio_producto,
+                product.stock,
+                product.subcategoria?.categoria?.nombre_categoria || '',
+                product.subcategoria?.nombre_subcategoria || '',
+                product.estado === 1 ? 'ACTIVO' : 'INACTIVO'
+            ];
+            row.forEach((text, i) => {
+                doc.text(text, 55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), y + 7, {
+                    width: columnWidths[i], align: 'left'
+                });
+            });
+            y += 25;
+        });
+        doc.end();
+    } catch (error) {
+        console.error('Error en exportación:', error);
+        next(error);
+    }
+};
+
+
 export {
     deleteProductById,
     createOrUpdateProduct,
     getProductById,
     getProducts,
     getProductsBySubcategoryId,
+    exportProductsToExcel,
+    exportProductsToPDF
 };

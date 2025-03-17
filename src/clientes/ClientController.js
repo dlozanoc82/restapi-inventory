@@ -215,7 +215,7 @@ const exportClientsToPDF = async (req, res, next) => {
         
         // Fecha de generación del reporte
         const currentDate = new Date();
-        doc.fontSize(12).text(`Fecha de generación: ${formatearFecha(currentDate)}`, 0, 70, { align: 'center' });
+        doc.fontSize(12).text(`Fecha de generación: ${formatearFecha(currentDate)}`, 0, 0, { align: 'center' });
         doc.moveDown();
         
         // Definir columnas de la tabla
