@@ -197,53 +197,60 @@ const exportClientsToPDF = async (req, res, next) => {
             });
         }
 
-        // Crear un nuevo documento PDF en formato horizontal con márgenes simétricos
         const doc = new PDFDocument({ margin: 50, size: 'A4', layout: 'landscape' });
-        
-        // Configurar cabeceras de la respuesta
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=clientes.pdf');
-        
         doc.pipe(res);
-        
-        // Agregar logo en la parte superior izquierda
+
+        // Logo y título solo en primera página
         const logoPath = path.join(process.cwd(), 'public', 'img', 'logo.png');
         doc.image(logoPath, 50, 30, { width: 80 });
-        
-        // Título del documento
         doc.fontSize(20).text('LISTADO DE CLIENTES', 0, 40, { align: 'center' });
-        
-        // Fecha de generación del reporte
-        const currentDate = new Date();
-        doc.fontSize(12).text(`Fecha de generación: ${formatearFecha(currentDate)}`, 0, 0, { align: 'center' });
+        doc.fontSize(12).text(`Fecha de generación: ${formatearFecha(new Date())}`, 0, 70, { align: 'center' });
         doc.moveDown();
-        
-        // Definir columnas de la tabla
-        const tableHeaders = [
-            'ID', 'Nombre', 'Apellido', 'Documento', 'Correo', 'Celular', 'Dirección', 'Fecha Registro', 'Estado'
-        ];
-        
+
+        // Configuración de tabla
+        const tableHeaders = ['ID', 'Nombre', 'Apellido', 'Documento', 'Correo', 'Celular', 'Dirección', 'Fecha Registro', 'Estado'];
         const columnWidths = [40, 80, 80, 70, 140, 70, 120, 90, 50];
-        
-        // Dibujar encabezados de la tabla con fondo de color
         let y = doc.y + 40;
-        doc.fillColor('#0055A4').rect(50, y, 750, 30).fill(); // Fondo azul oscuro para los encabezados
-        doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(10);
-        tableHeaders.forEach((header, i) => {
-            doc.text(header, 55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), y + 9, {
-                width: columnWidths[i], align: 'left'
+
+        // Función para encabezados (bold)
+        const drawHeaders = () => {
+            doc.fillColor('#0055A4').rect(50, y, 750, 30).fill();
+            doc.fillColor('#ffffff')
+               .font('Helvetica-Bold')  // <- Solo aquí usamos bold
+               .fontSize(10);
+            
+            tableHeaders.forEach((header, i) => {
+                doc.text(header, 55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), y + 9, {
+                    width: columnWidths[i],
+                    align: 'left'
+                });
             });
-        });
-        
-        y += 30;
-        doc.moveTo(50, y).lineTo(800, y).stroke('black'); // Línea resaltada
-        
-        // Dibujar los datos de la tabla con colores alternos en las filas y líneas horizontales destacadas
-        doc.font('Helvetica').fontSize(9);
+            y += 30;
+            doc.moveTo(50, y).lineTo(800, y).stroke('black');
+        };
+
+        // Encabezados iniciales
+        drawHeaders();
+
+        // Altura máxima por página
+        const maxPageHeight = 595.28 - 50;
+
+        // Generar filas
         clients.forEach((client, index) => {
+            if (y + 25 > maxPageHeight) {
+                doc.addPage();
+                y = 50;
+                drawHeaders();
+                doc.font('Helvetica') // Resetear a fuente normal en nuevas páginas
+                   .fontSize(9);
+            }
+
+            // Fondo alternado
             doc.fillColor(index % 2 === 0 ? '#D0E4F2' : 'white').rect(50, y, 750, 25).fill();
             
-            doc.fillColor('black');
+            // Datos (fuente normal)
             const row = [
                 index + 1,
                 client.nombre_cliente,
@@ -255,23 +262,22 @@ const exportClientsToPDF = async (req, res, next) => {
                 formatearFecha(client.fecha_registro),
                 client.estado === 1 ? 'ACTIVO' : 'INACTIVO'
             ];
+
+            doc.fillColor('black')
+               .font('Helvetica')  // <- Fuente normal explícita
+               .fontSize(9);
             
             row.forEach((text, i) => {
-                // if (i === 8) { // Columna de Estado
-                //     doc.fillColor(text === 'ACTIVO' ? 'green' : 'red');
-                // } else {
-                //     doc.fillColor('black');
-                // }
-                doc.text(text.toString(), 55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), y + 7, {
-                    width: columnWidths[i], align: 'left'
-                });
+                doc.text(text.toString(), 
+                    55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), 
+                    y + 7, 
+                    { width: columnWidths[i], align: 'left' }
+                );
             });
-            
-            // doc.moveTo(50, y + 25).lineTo(800, y + 25).stroke('black'); // Línea resaltada
+
             y += 25;
         });
-        
-        // Finalizar el PDF
+
         doc.end();
     } catch (error) {
         console.error('Error en exportación:', error);

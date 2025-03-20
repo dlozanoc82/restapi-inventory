@@ -211,14 +211,13 @@ const exportProductsToExcel = async (req, res, next) => {
                 {
                     model: Subcategoria,
                     as: 'subcategoria',
-                    attributes: ['id_subcategoria', 'nombre_subcategoria'],
-                    include: {
+                    include: [{
                         model: Categoria,
-                        as: 'categoria',
-                        attributes: ['id_categoria', 'nombre_categoria']
-                    }
+                        as: 'categoria'
+                    }]
                 }
-            ]
+            ],
+            order: [['id_producto', 'DESC']]
         });
 
         if (!products || products.length === 0) {
@@ -232,44 +231,98 @@ const exportProductsToExcel = async (req, res, next) => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Productos');
 
-        worksheet.mergeCells('A1:H1');
+        // Título
+        worksheet.mergeCells('A1:K1');
         const titleCell = worksheet.getCell('A1');
         titleCell.value = "LISTADO DE PRODUCTOS";
         titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
         titleCell.font = { bold: true, size: 20, color: { argb: 'FFFFFF' } };
         titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '0b5394' } };
-        worksheet.getRow(1).height = 40;
+        titleCell.border = { 
+            top: { style: 'thin', color: { argb: '000000' } },
+            left: { style: 'thin', color: { argb: '000000' } },
+            bottom: { style: 'thin', color: { argb: '000000' } },
+            right: { style: 'thin', color: { argb: '000000' } }
+        };
+        worksheet.getRow(1).height = 60;
 
+        // Logo
+        const logoImage = workbook.addImage({
+            filename: 'public/img/logo-excel.png',
+            extension: 'png'
+        });
+        worksheet.addImage(logoImage, {
+            tl: { col: 0.2, row: 0.2 },
+            ext: { width: 60, height: 60 }
+        });
+
+        // Encabezados
         worksheet.getRow(2).values = [
-            'ID', 'Nombre', 'Descripción', 'Precio', 'Stock', 'Categoría', 'Subcategoría', 'Estado'
+            'ID', 'Nombre', 'Descripción', 'Precio', 'Stock', 'Garantía',
+            'Duración Garantía', 'Fecha Creación', 'Estado', 'Categoría', 'Subcategoría'
         ];
         worksheet.getRow(2).height = 20;
-        worksheet.getRow(2).font = { bold: true, size: 14, color: { argb: 'FFFFFF' } };
 
-        const columnWidths = [10, 30, 40, 15, 10, 20, 20, 10];
+        const headerRow = worksheet.getRow(2);
+        headerRow.eachCell((cell) => {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.font = { bold: true, size: 14, color: { argb: 'FFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '6aa84f' } };
+            cell.border = { 
+                top: { style: 'thin', color: { argb: '000000' } },
+                left: { style: 'thin', color: { argb: '000000' } },
+                bottom: { style: 'thin', color: { argb: '000000' } },
+                right: { style: 'thin', color: { argb: '000000' } }
+            };
+        });
+
+        // Anchuras de columnas
+        const columnWidths = [8, 30, 50, 15, 10, 15, 20, 20, 15, 20, 20];
         columnWidths.forEach((width, index) => {
             worksheet.getColumn(index + 1).width = width;
         });
 
+        // Datos
         products.forEach((product, index) => {
-            worksheet.addRow([
+            const garantiaText = product.garantia === 1 ? 'SI' : 'NO';
+            const duracionGarantia = product.garantia === 1 ? formatearFecha(product.duracion_garantia) : 'NO APLICA';
+            const estadoText = product.estado === 1 ? 'ACTIVO' : 'INACTIVO';
+            const categoria = product.subcategoria?.categoria?.nombre_categoria || "Sin categoría";
+            const subcategoria = product.subcategoria?.nombre_subcategoria || "Sin subcategoría";
+
+            const row = worksheet.addRow([
                 index + 1,
                 product.nombre_producto,
                 product.descripcion_producto,
                 product.precio_producto,
                 product.stock,
-                product.subcategoria?.categoria?.nombre_categoria || '',
-                product.subcategoria?.nombre_subcategoria || '',
-                product.estado === 1 ? 'ACTIVO' : 'INACTIVO'
+                garantiaText,
+                duracionGarantia,
+                product.fecha_creacion,
+                estadoText,
+                categoria,
+                subcategoria
             ]);
+
+            row.height = 20;
+            row.eachCell((cell) => {
+                cell.alignment = { vertical: 'middle', horizontal: 'left' };
+                cell.border = { 
+                    top: { style: 'thin', color: { argb: '000000' } },
+                    left: { style: 'thin', color: { argb: '000000' } },
+                    bottom: { style: 'thin', color: { argb: '000000' } },
+                    right: { style: 'thin', color: { argb: '000000' } }
+                };
+            });
         });
 
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', 'attachment; filename=productos.xlsx');
         await workbook.xlsx.write(res);
         res.end();
+
     } catch (error) {
-        console.error('Error en exportación:', error);
+        console.error('Error en exportación de productos:', error);
         next(error);
     }
 };
@@ -282,14 +335,13 @@ const exportProductsToPDF = async (req, res, next) => {
                 {
                     model: Subcategoria,
                     as: 'subcategoria',
-                    attributes: ['id_subcategoria', 'nombre_subcategoria'],
-                    include: {
+                    include: [{
                         model: Categoria,
-                        as: 'categoria',
-                        attributes: ['id_categoria', 'nombre_categoria']
-                    }
+                        as: 'categoria'
+                    }]
                 }
-            ]
+            ],
+            order: [['id_producto', 'DESC']]
         });
 
         if (!products || products.length === 0) {
@@ -305,62 +357,113 @@ const exportProductsToPDF = async (req, res, next) => {
         res.setHeader('Content-Disposition', 'attachment; filename=productos.pdf');
         doc.pipe(res);
 
-        // Agregar logo en la parte superior izquierda
+        // Logo y título solo en primera página
         const logoPath = path.join(process.cwd(), 'public', 'img', 'logo.png');
         doc.image(logoPath, 50, 30, { width: 80 });
-        
-        // Título del documento
         doc.fontSize(20).text('LISTADO DE PRODUCTOS', 0, 40, { align: 'center' });
-        
-        // Fecha de generación del reporte
-        const currentDate = new Date();
-        doc.fontSize(12).text(`Fecha de generación: ${formatearFecha(currentDate)}`, 0, 70, { align: 'center' });
+        doc.fontSize(12).text(`Fecha de generación: ${formatearFecha(new Date())}`, 0, 70, { align: 'center' });
         doc.moveDown();
+
+        // Configuración de columnas
+        const tableHeaders = [
+            'ID', 
+            'Categoría', 
+            'Subcategoría', 
+            'Producto', 
+            'Descripción', 
+            'Precio', 
+            'Stock', 
+            ['Duración', 'Garantía'],
+            'Estado'
+        ];
+        
+        const columnWidths = [20, 70, 90, 100, 200, 80, 40, 80, 60];
+        let y = doc.y + 40;
+
+        // Función para dibujar encabezados
+        const drawHeaders = () => {
+            doc.fillColor('#0055A4').rect(50, y, 750, 40).fill();
+            doc.fillColor('#ffffff').font('Helvetica-Bold');
+            
+            tableHeaders.forEach((header, i) => {
+                const xPosition = 55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0);
                 
-
-        const tableHeaders = ['ID', 'Nombre', 'Descripción', 'Precio', 'Stock', 'Categoría', 'Subcategoría', 'Estado'];
-        const columnWidths = [40, 100, 210, 80, 50, 80, 100, 60];
-
-        let y = doc.y + 20;
-        doc.fillColor('#0055A4').rect(50, y, 750, 30).fill();
-        doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(10);
-        tableHeaders.forEach((header, i) => {
-            doc.text(header, 55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), y + 9, {
-                width: columnWidths[i], align: 'left'
+                if (Array.isArray(header)) {
+                    doc.fontSize(9)
+                       .text(header[0], xPosition, y + 10, { width: columnWidths[i], align: 'left' })
+                       .text(header[1], xPosition, y + 22, { width: columnWidths[i], align: 'left' });
+                } else {
+                    doc.fontSize(10)
+                       .text(header, xPosition, y + 15, { 
+                           width: columnWidths[i], 
+                           align: 'left'
+                       });
+                }
             });
-        });
-        y += 30;
-        doc.moveTo(50, y).lineTo(800, y).stroke('black');
+            y += 40;
+            doc.moveTo(50, y).lineTo(800, y).stroke('black');
+        };
 
-        doc.font('Helvetica').fontSize(9);
+        // Encabezados iniciales
+        drawHeaders();
+
+        // Altura máxima por página (A4 landscape: 595.28pt)
+        const maxPageHeight = 595.28 - 50; // Margen inferior
+
+        // Generar filas con paginación
         products.forEach((product, index) => {
+            // Verificar espacio para nueva fila
+            if (y + 25 > maxPageHeight) {
+                doc.addPage();
+                y = 50; // Resetear posición Y
+                drawHeaders(); // Encabezados en nueva página
+                doc.font('Helvetica').fontSize(9); // Restaurar fuente normal
+            }
+
+            // Procesar datos
+            const duracionGarantia = product.garantia === 1 
+                ? formatearFecha(product.duracion_garantia) 
+                : 'NO APLICA';
+                
+            const estadoText = product.estado === 1 ? 'ACTIVO' : 'INACTIVO';
+            const categoria = product.subcategoria?.categoria?.nombre_categoria || "Sin categoría";
+            const subcategoria = product.subcategoria?.nombre_subcategoria || "Sin subcategoría";
+
+            // Fondo alternado
             doc.fillColor(index % 2 === 0 ? '#D0E4F2' : 'white').rect(50, y, 750, 25).fill();
-            doc.fillColor('black');
+            doc.fillColor('black').font('Helvetica').fontSize(9);
+
+            // Datos
             const row = [
-                index + 1,
+                (index + 1).toString(),
+                categoria,
+                subcategoria,
                 product.nombre_producto,
                 product.descripcion_producto,
-                product.precio_producto,
-                product.stock,
-                product.subcategoria?.categoria?.nombre_categoria || '',
-                product.subcategoria?.nombre_subcategoria || '',
-                product.estado === 1 ? 'ACTIVO' : 'INACTIVO'
+                `$${parseFloat(product.precio_producto).toFixed(2)}`,
+                product.stock.toString(),
+                duracionGarantia,
+                estadoText
             ];
+
+            // Dibujar celdas
             row.forEach((text, i) => {
-                doc.text(text, 55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), y + 7, {
-                    width: columnWidths[i], align: 'left'
-                });
+                doc.text(text, 
+                    55 + columnWidths.slice(0, i).reduce((a, b) => a + b, 0), 
+                    y + 7, 
+                    { width: columnWidths[i], align: 'left' }
+                );
             });
+
             y += 25;
         });
+
         doc.end();
     } catch (error) {
-        console.error('Error en exportación:', error);
+        console.error('Error en exportación de productos:', error);
         next(error);
     }
 };
-
-
 export {
     deleteProductById,
     createOrUpdateProduct,
