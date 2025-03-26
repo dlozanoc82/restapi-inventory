@@ -43,6 +43,11 @@ const Producto = sequelize.define('Producto', {
         defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
         allowNull: true,
     },
+    codigo_rfid: {
+        type: DataTypes.STRING(50), // El UID de la tarjeta RFID
+        unique: true,
+        allowNull: true,
+    },
     estado: {
         type: DataTypes.TINYINT(1),
         defaultValue: 1,

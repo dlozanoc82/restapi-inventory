@@ -102,6 +102,56 @@ const getProductById = async (req, res, next) => {
     }
 };
 
+// Obtener producto por código RFID
+export const getProductByRFID = async (req, res, next) => {
+    try {
+        const { codigo_rfid } = req.params; // Capturar el código desde los parámetros de la URL
+
+        const product = await Producto.findOne({
+            where: { codigo_rfid },
+            include: [
+                {
+                    model: Subcategoria,
+                    as: 'subcategoria',
+                    attributes: ['id_subcategoria', 'nombre_subcategoria'],
+                    include: {
+                        model: Categoria,
+                        as: 'categoria',
+                        attributes: ['id_categoria', 'nombre_categoria']
+                    }
+                }
+            ]
+        });
+
+        if (!product) {
+            return res.status(404).json({ message: "Producto no encontrado" });
+        }
+
+        const productJSON = product.toJSON();
+
+        const formattedProduct = {
+            id_producto: productJSON.id_producto,
+            nombre_producto: productJSON.nombre_producto,
+            descripcion_producto: productJSON.descripcion_producto,
+            imagen_producto: productJSON.imagen_producto,
+            precio_producto: productJSON.precio_producto,
+            stock: productJSON.stock,
+            garantia: productJSON.garantia,
+            duracion_garantia: productJSON.duracion_garantia,
+            fecha_creacion: productJSON.fecha_creacion,
+            estado: productJSON.estado,
+            id_categoria: productJSON.subcategoria?.categoria?.id_categoria || null,
+            id_subcategoria: productJSON.subcategoria?.id_subcategoria || null,
+            categoria: productJSON.subcategoria?.categoria?.nombre_categoria || "Sin categoría",
+            subcategoria: productJSON.subcategoria?.nombre_subcategoria || "Sin subcategoría"
+        };
+
+        successAnswer(req, res, formattedProduct, 200);
+    } catch (error) {
+        next(error);
+    }
+};
+
 // Obtener producto por ID Subcategoria
 const getProductsBySubcategoryId = async (req, res, next) => {
     try {
